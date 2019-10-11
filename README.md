@@ -19,3 +19,18 @@ For detail on OpenShift UPI, please reference the following:
 
 
 The following diagram outlines the infrastructure architecture.
+
+
+## Terraform Automation
+
+This project uses mainly Terraform as infrastructure management and installation automation driver. All the user provisioned resource are created via the terraform scripts in this project.
+
+### Prerequisites
+
+1. To use Terraform automation, download the Terraform binaries [here](https://www.terraform.io/).
+
+   On MacOS, you can acquire it using [homebrew](brew.sh) using this command:
+
+   ```bash
+   brew install terraform
+   ```
