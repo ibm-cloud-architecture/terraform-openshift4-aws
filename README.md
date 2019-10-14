@@ -97,7 +97,7 @@ Navigate to the git repository folder `1_private_network`
 cd 1_private_network
 ```
 
-Create a `terraform.tfvar` file with following content:
+Create a `terraform.tfvars` file with following content:
 
 |name | required                        | value        |
 |----------------|------------|--------------|
@@ -111,5 +111,20 @@ Create a `terraform.tfvar` file with following content:
 
 
 See [Terraform documentation](https://www.terraform.io/intro/getting-started/variables.html) for the format of this file.
+
+
+Initialize the Terraform:
+
+```bash
+terraform init
+```
+
+Run the terraform provisioning:
+
+```bash
+terraform plan
+terrafrm apply
+```
+
 
 
