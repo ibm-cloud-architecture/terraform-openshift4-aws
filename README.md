@@ -34,3 +34,25 @@ This project uses mainly Terraform as infrastructure management and installation
    ```bash
    brew install terraform
    ```
+
+   We recommend to run Terraform automation from an AWS bastion host because the installation will place the entire OpenShift cluster in a private network where you might not have easy access to validate the cluster installation from your laptop.
+
+   Provision an EC2 bastion instance (with public and private subnets).
+   Install Terraform binary.
+   Install git
+
+   ```bash
+   sudo yum intall git-all
+   git --version
+   ```
+
+   Install OpenShift command line `oc` cli:
+
+   ```bash
+   wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux-4.x.xx.tar.gz
+   tar -xvf openshift-client-linux-4.x.xx.tar.gz
+   chmod u+x oc kubectl
+   sudo mv oc /usr/local/bin
+   sudo mv kubectl /usr/local/bin
+   oc version
+   ```
