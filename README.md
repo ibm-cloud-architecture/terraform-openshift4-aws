@@ -56,3 +56,32 @@ This project uses mainly Terraform as infrastructure management and installation
    sudo mv kubectl /usr/local/bin
    oc version
    ```
+
+   You'll also need the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/awscli-install-bundle.html) to do this.
+
+2. Get the Terraform code
+
+   ```bash
+   git clone https://github.com/ibm-cloud-architecture/terraform-openshift4-aws.git
+   ```
+
+3. Prepare the DNS 
+
+   OpenShift requires a valid DNS doamin, you can get one from AWS Route53 or using existing domain and registrar.
+
+
+4. Prepare AWS Account Access
+
+   Please reference the [Required AWS Infrastructure components](https://docs.openshift.com/container-platform/4.1/installing/installing_aws_user_infra/installing-aws-user-infra.html#installation-aws-user-infra-requirements_installing-aws-user-infra) to setup your AWS account before installing OpenShift 4.
+
+   We suggest to create an AWS IAM user dedicated for OpenShift installation with permissions documented above.
+   On the bastion host, configure your AWS user credential as environment variables:
+
+    ```bash
+    export AWS_ACCESS_KEY_ID=RKXXXXXXXXXXXXXXX
+    export AWS_SECRET_ACCESS_KEY=LXXXXXXXXXXXXXXXXXX/ng
+    export AWS_DEFAULT_REGION=us-east-2
+
+    aws s3 ls
+   ```
+
