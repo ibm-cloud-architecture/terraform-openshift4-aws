@@ -126,5 +126,28 @@ terraform plan
 terrafrm apply
 ```
 
+2. Provision Load Balancers
+
+This stage provisions the OpenShift control plane load balancer and the target groups. It will take the vpc_id and subnets ids from the previous step.
+
+```bash
+cd 2_load_balancer
+
+cat > terraform.tfvars <<EOF
+aws_region = "us-east-2"
+default_tags = { owner = "gchen" }
+infrastructure_id = "ocp4chen-aws"
+clustername = "ocp4chen"
+private_vpc_id = "vpc-0eec91d36e66950f3"
+private_vpc_private_subnet_ids = [
+  "subnet-08fa6e0ab331804ee",
+  "subnet-0569eca464249d117",
+  "subnet-0d5e8d8a9fc6f6187",
+]
+EOF
+
+terraform init
+terraform plan
+terraform apply
 
 
