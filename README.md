@@ -85,3 +85,31 @@ This project uses mainly Terraform as infrastructure management and installation
     aws s3 ls
    ```
 
+## Installation Procedure
+
+This project installs the OpenShift 4 in several stages where each stage automates the provisioning of different components from infrastructure to OpenShift installation. The design is to provide the flexibility of different topology and infrastructure requirement.
+
+1. Provision Prviate Network.
+The script will create an AWS VPC and private subnets.
+Navigate to the git repository folder `1_private_network`
+
+```bash
+cd 1_private_network
+```
+
+Create a `terraform.tfvar` file with following content:
+
+|name | required                        | value        |
+|----------------|------------|--------------|
+| `aws_region`   | no           | AWS region that the VPC will be created in.  By default, uses `us-east-2`.  Note that for an HA installation, the AWS selected region should have at least 3 availability zones. |
+| `aws_azs`          | no           | AWS Availability Zones that the VPC will be created in, e.g. `[ "a", "b", "c"]` to install in three availability zones.  By default, uses `["a", "b", "c"]`.  Note that the AWS selected region should have at least 3 availability zones for high availability.  Setting to a single availability zone will disable high availability and not provision EFS, in this case, reduce the number of master and proxy nodes to 1. |
+| `default_tags`     | no          | AWS tag to identify a resource for example owner:gchen     |
+| `infrastructure_id` | yes | This id will be prefixed to all the AWS infrastructure resources provisioned with the script |
+| `clustername`     | yes          | The name of the OpenShift cluster you will install     |
+| `vpc_cidr`     | yes          | VPC private netwrok CIDR range default 10.10.0.0/16  |
+| `vpc_private_subnet_cidrs`     | yes          | CIDR range for the VPC private subnets default ["10.10.10.0/24", "10.10.11.0/24", "10.10.12.0/24" ]   |
+
+
+See [Terraform documentation](https://www.terraform.io/intro/getting-started/variables.html) for the format of this file.
+
+
