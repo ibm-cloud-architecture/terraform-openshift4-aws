@@ -153,7 +153,7 @@ terraform apply
 
 
 3. Setup Route53 DNS Zones
-OpenShift requires the public zone setup in Route53. 
+OpenShift requires the private zone setup in Route53. This zone maps to the internal control plane ELB.
 
 ```bash
 cd 3_dns
@@ -173,3 +173,21 @@ terraform plan
 terraform apply
 ```
 
+4. Add security groups
+
+```bash
+cd 4_security_group
+
+cat > terraform.tfvars <<EOF
+aws_region = "us-east-2"
+default_tags = { owner = "gchen" }
+infrastructure_id = "ocp4chen-aws"
+clustername = "ocp4chen"
+domain = "kpak.tk"
+private_vpc_id = "vpc-0eec91d36e66950f3"
+EOF
+
+terraform init
+terraform plan
+terraform apply
+```
