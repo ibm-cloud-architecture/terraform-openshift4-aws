@@ -149,5 +149,27 @@ EOF
 terraform init
 terraform plan
 terraform apply
+```
 
+
+3. Setup Route53 DNS Zones
+OpenShift requires the public zone setup in Route53. 
+
+```bash
+cd 3_dns
+
+cat > terraform.tfvars <<EOF
+aws_region = "us-east-2"
+default_tags = { owner = "gchen" }
+infrastructure_id = "ocp4chen-aws"
+clustername = "ocp4chen"
+domain = "kpak.tk"
+private_vpc_id = "vpc-0eec91d36e66950f3"
+ocp_control_plane_lb_int_arn = "arn:aws:elasticloadbalancing:us-east-2:353456611220:loadbalancer/net/ocp4chen-aws-int/0272df577ba9a2c3"
+EOF
+
+terraform init
+terraform plan
+terraform apply
+```
 
