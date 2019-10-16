@@ -220,9 +220,9 @@ default_tags = { owner = "gchen" }
 infrastructure_id = "ocp4chen-aws"
 clustername = "ocp4chen"
 domain = "kpak.tk"
-vpc_cidr = "172.31.0.0/16"
-public_vpc_private_subnet_cidrs = ["172.31.0.0/24", "172.31.1.0/24", "172.31.2.0/24" ]
-public_vpc_public_subnet_cidrs = ["172.31.4.0/24", "172.31.5.0/24", "172.31.6.0/24" ]
+vpc_cidr = "172.33.0.0/16"
+public_vpc_private_subnet_cidrs = ["172.33.0.0/24", "172.33.1.0/24", "172.33.2.0/24" ]
+public_vpc_public_subnet_cidrs = ["172.33.4.0/24", "172.33.5.0/24", "172.33.6.0/24" ]
 EOF
 
 terraform init
@@ -230,3 +230,37 @@ terraform plan
 terraform apply
 ```
 
+7. Setup Transit Gateway
+This will forward the traffic between DMZ (public VPC) and the OpenShift private network VPC.
+
+```bash
+cd 7_transit_gw
+
+cat > terraform.tfvars <<EOF
+aws_region = "us-east-2"
+default_tags = { owner = "gchen" }
+infrastructure_id = "ocp4chen-aws"
+clustername = "ocp4chen"
+private_vpc_id = "vpc-0eec91d36e66950f3"
+public_vpc_id = "vpc-0fc1c5f10a0d790b0"
+private_vpc_private_subnet_ids = [
+  "subnet-08fa6e0ab331804ee",
+  "subnet-0569eca464249d117",
+  "subnet-0d5e8d8a9fc6f6187",
+]
+public_vpc_private_subnet_ids = [
+  "subnet-0b51cbbad81e2409b",
+  "subnet-03d326fc653c8ea93",
+  "subnet-0b9d0029123156939",
+]
+public_vpc_public_subnet_ids = [
+  "subnet-08195aac9338a6589",
+  "subnet-0c48c86e279f3fe6e",
+  "subnet-0c5724d3d7ad56721",
+]
+EOF
+
+terraform init
+terraform plan
+terraform apply
+```
