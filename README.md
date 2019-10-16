@@ -19,7 +19,7 @@ For detail on OpenShift UPI, please reference the following:
 
 
 The following diagram outlines the infrastructure architecture.
-
+![OpenShift 4 on AWS](img/openshift_aws_network.PNG)
 
 ## Terraform Automation
 
@@ -220,9 +220,9 @@ default_tags = { owner = "gchen" }
 infrastructure_id = "ocp4chen-aws"
 clustername = "ocp4chen"
 domain = "kpak.tk"
-vpc_cidr = "172.33.0.0/16"
-public_vpc_private_subnet_cidrs = ["172.33.0.0/24", "172.33.1.0/24", "172.33.2.0/24" ]
-public_vpc_public_subnet_cidrs = ["172.33.4.0/24", "172.33.5.0/24", "172.33.6.0/24" ]
+vpc_cidr = "172.21.0.0/16"
+public_vpc_private_subnet_cidrs = ["172.21.0.0/24", "172.21.1.0/24", "172.21.2.0/24" ]
+public_vpc_public_subnet_cidrs = ["172.21.4.0/24", "172.21.5.0/24", "172.21.6.0/24" ]
 EOF
 
 terraform init
@@ -242,25 +242,31 @@ default_tags = { owner = "gchen" }
 infrastructure_id = "ocp4chen-aws"
 clustername = "ocp4chen"
 private_vpc_id = "vpc-0eec91d36e66950f3"
-public_vpc_id = "vpc-0fc1c5f10a0d790b0"
 private_vpc_private_subnet_ids = [
   "subnet-08fa6e0ab331804ee",
   "subnet-0569eca464249d117",
   "subnet-0d5e8d8a9fc6f6187",
 ]
+public_vpc_id = "vpc-0c8ca2ee71f07f9da"
 public_vpc_private_subnet_ids = [
-  "subnet-0b51cbbad81e2409b",
-  "subnet-03d326fc653c8ea93",
-  "subnet-0b9d0029123156939",
+  "subnet-09c3879b840105048",
+  "subnet-0b485f1485e968131",
+  "subnet-0d73cf16506341597",
 ]
 public_vpc_public_subnet_ids = [
-  "subnet-08195aac9338a6589",
-  "subnet-0c48c86e279f3fe6e",
-  "subnet-0c5724d3d7ad56721",
+  "subnet-039003cc21089499e",
+  "subnet-04b7f917e0475dec7",
+  "subnet-028302a8c9f09c6bf",
 ]
 EOF
 
 terraform init
 terraform plan
 terraform apply
+```
+
+8. Install OpenShift with bootnode
+
+```bash
+
 ```
