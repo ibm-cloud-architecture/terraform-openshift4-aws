@@ -207,3 +207,26 @@ terraform init
 terraform plan
 terraform apply
 ```
+
+6. Create Public VPC
+Acting as DMZ zone.
+
+```bash
+cd 6_public_network
+
+cat > terraform.tfvars <<EOF
+aws_region = "us-east-2"
+default_tags = { owner = "gchen" }
+infrastructure_id = "ocp4chen-aws"
+clustername = "ocp4chen"
+domain = "kpak.tk"
+vpc_cidr = "172.31.0.0/16"
+public_vpc_private_subnet_cidrs = ["172.31.0.0/24", "172.31.1.0/24", "172.31.2.0/24" ]
+public_vpc_public_subnet_cidrs = ["172.31.4.0/24", "172.31.5.0/24", "172.31.6.0/24" ]
+EOF
+
+terraform init
+terraform plan
+terraform apply
+```
+
