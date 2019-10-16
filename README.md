@@ -183,8 +183,24 @@ aws_region = "us-east-2"
 default_tags = { owner = "gchen" }
 infrastructure_id = "ocp4chen-aws"
 clustername = "ocp4chen"
-domain = "kpak.tk"
 private_vpc_id = "vpc-0eec91d36e66950f3"
+EOF
+
+terraform init
+terraform plan
+terraform apply
+```
+
+5. Add IAM roles and instances
+
+```bash
+cd 5_iam
+
+cat > terraform.tfvars <<EOF
+aws_region = "us-east-2"
+default_tags = { owner = "gchen" }
+infrastructure_id = "ocp4chen-aws"
+clustername = "ocp4chen"
 EOF
 
 terraform init
