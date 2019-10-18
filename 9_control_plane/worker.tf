@@ -25,6 +25,6 @@ resource "aws_instance" "worker" {
       )
   )}"
   user_data = <<EOF
-${base64decode(var.master_ign_64)}
+${base64decode(var.worker_ign_64)}
 EOF
 }
