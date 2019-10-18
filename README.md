@@ -19,7 +19,7 @@ For detail on OpenShift UPI, please reference the following:
 
 
 The following diagram outlines the infrastructure architecture.
-![OpenShift 4 on AWS](img/openshift_aws_network.PNG)
+![OpenShift 4 on AWS](img/openshift_aws_network.png)
 
 ## Terraform Automation
 
