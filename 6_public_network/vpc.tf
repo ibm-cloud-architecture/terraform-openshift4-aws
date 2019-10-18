@@ -16,3 +16,8 @@ resource "aws_vpc" "ocp_public_vpc" {
     )
   )}"
 }
+
+resource "aws_route53_zone_association" "public_vpc" {
+  zone_id = "${aws_route53_zone.example.zone_id}"
+  vpc_id  = "${aws_vpc.ocp_public_vpc.id}"
+}
