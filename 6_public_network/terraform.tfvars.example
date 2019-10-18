@@ -1,0 +1,23 @@
+aws_region = ""
+aws_azs = ["a", "b", "c"]
+default_tags = {}
+infrastructure_id = ""
+clustername = "ocp4"
+private_vpc_cidr = "10.10.0.0/16"
+vpc_private_subnet_cidrs = "["10.10.10.0/24","10.10.11.0/24","10.10.12.0/24"]
+domain = "kpak.tk"
+public_vpc_cidr = "172.16.0.0/16"
+public_vpc_private_subnet_cidrs = ["172.16.10.0/24","172.16.11.0/24","172.16.12.0/24"]
+public_vpc_public_subnet_cidrs = ["172.16.20.0/24","172.16.21.0/24","172.16.22.0/24"]
+ami = ""
+aws_access_key_id = ""
+aws_secret_access_key = ""
+cluster_network_cidr = "192.168.0.0/17"
+cluster_network_host_prefix = "23"
+service_network_cidr = "192.168.128.0/24"
+bootstrap = {         type = "i3.xlarge"}
+control_plane = {         count = "3" ,        type = "m4.xlarge",         disk = "120"}
+worker = {         count = "3"  ,       type = "m4.large" ,        disk = "120"}
+openshift_pull_secret = "./openshift_pull_secret.json"
+use_worker_machinesets = true
+openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
