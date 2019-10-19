@@ -119,7 +119,7 @@ resource "null_resource" "generate_manifests" {
   }
 
   provisioner "local-exec" {
-    command = "mv install-config.yaml ${path.module}/${local.infrastructure_id}"
+    command = "mv ${path.module}/install-config.yaml ${path.module}/${local.infrastructure_id}"
   }
 
   provisioner "local-exec" {
@@ -140,6 +140,10 @@ resource "null_resource" "manifest_cleanup_control_plane_machineset" {
 
   provisioner "local-exec" {
     command = "rm -f ${path.module}/${local.infrastructure_id}/openshift/99_openshift-cluster-api_master-machines-*.yaml"
+  }
+
+  provisioner "local-exec" {
+    command = "infraID=`jq '.\"*installconfig.ClusterID\".InfraID' .openshift_install_state.json  | tr -d '\"'`;sed -i 's/$infraID/${local.infrastructure_id}/g'  ${path.module}/${local.infrastructure_id}/.openshift_install_state.json"
   }
 }
 

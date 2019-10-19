@@ -5,6 +5,7 @@ variable "infrastructure_id" { default = "" }
 variable "clustername" { default = "ocp4" }
 variable "private_vpc_cidr" { default = "10.10.0.0/16" }
 variable "public_vpc_cidr" { default = "172.16.0.0/16" }
+variable "public_vpc_id" { default = "" }
 variable "vpc_private_subnet_cidrs" { default = "" }
 variable "domain" { default = "" }
 variable "public_vpc_private_subnet_cidrs" { default = "" }

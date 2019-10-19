@@ -208,6 +208,7 @@ resource "aws_security_group_rule" "worker_icmp" {
 resource "aws_security_group_rule" "worker_443" {
   type        = "ingress"
 
+  from_port     = 443
   to_port     = 443
   protocol    = "tcp"
   cidr_blocks = [
@@ -220,6 +221,7 @@ resource "aws_security_group_rule" "worker_443" {
 resource "aws_security_group_rule" "worker_80" {
   type        = "ingress"
 
+  from_port     = 80
   to_port     = 80
   protocol    = "tcp"
   cidr_blocks = [

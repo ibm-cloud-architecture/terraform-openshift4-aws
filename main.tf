@@ -1,9 +1,5 @@
-resource "random_id" "clusterid" {
-  byte_length = "2"
-}
-
 locals {
-  infrastructure_id = "${var.clustername}-${random_id.clusterid.hex}"
+  infrastructure_id = "${var.clustername}-vbd01"
 }
 
 module "private_network" {
@@ -90,7 +86,8 @@ module "public_network" {
   default_tags = "${var.default_tags}"
   infrastructure_id = "${local.infrastructure_id}"
   clustername = "${var.clustername}"
-  vpc_cidr = "${var.public_vpc_cidr}"
+  public_vpc_id = "${var.public_vpc_id}"
+  ocp_route53_private_zone_id = "${module.dns.ocp_route53_private_zone_id}"
   public_vpc_private_subnet_cidrs = "${var.public_vpc_private_subnet_cidrs}"
   public_vpc_public_subnet_cidrs = "${var.public_vpc_public_subnet_cidrs}"
   domain = "${var.domain}"
@@ -114,8 +111,7 @@ module "transit_gw" {
   public_vpc_private_subnet_ids = "${module.public_network.public_vpc_private_subnet_ids}"
   public_vpc_public_subnet_ids = "${module.public_network.public_vpc_public_subnet_ids}"
 }
-# ---------------------------
-# ---------------------------
+
 module "bootstrap" {
   source = "./8_bootstrap"
   aws_region = "${var.aws_region}"
