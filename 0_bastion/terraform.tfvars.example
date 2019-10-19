@@ -1,0 +1,9 @@
+aws_region = "us-east-2"
+aws_azs = ["a","b","c"]
+default_tags =  { "owner" = "vbudi" }
+infrastructure_id = "ocp4vbudi-vbd01"
+clustername = "ocp4vbudi"
+vpc_cidr = "172.16.0.0/16"
+public_vpc_private_subnet_cidrs = [ "172.16.10.0/24", "172.16.11.0/24", "172.16.12.0/24" ]
+public_vpc_public_subnet_cidrs = [ "172.16.20.0/24", "172.16.21.0/24", "172.16.22.0/24" ]
+domain = "vbudi.cf"
