@@ -163,10 +163,6 @@ resource "null_resource" "manifest_cleanup_worker_machineset" {
   }
 }
 
-data "local_file" "worker-user-data" {
-    filename = "${path.module}/${local.infrastructure_id}/openshift/99_openshift-cluster-api_worker-user-data-secret.yaml"
-}
-
 resource "local_file" "worker_machineset" {
   count = "${var.use_worker_machinesets ? length(var.aws_azs) : 0}"
 
