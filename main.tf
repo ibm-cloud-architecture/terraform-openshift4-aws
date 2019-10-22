@@ -180,3 +180,20 @@ module "control_plane" {
 # ---------------------------
 #     "${module.control_plane.int_lb_url}"
 # ---------------------------
+module "postinstall" {
+  source = "./10_postinstall"
+
+  aws_region = "${var.aws_region}"
+  aws_azs = "${var.aws_azs}"
+  default_tags = "${var.default_tags}"
+
+  openshift_installer_url = "${var.openshift_installer_url}"
+
+  infrastructure_id = "${local.infrastructure_id}"
+  clustername = "${var.clustername}"
+  domain = "${var.domain}"
+
+  bootstrap_ip = "${module.bootstrap.bootstrap_ip}"
+  private_key_pem = "${module.bootstrap.private_ssh_key}"
+
+}

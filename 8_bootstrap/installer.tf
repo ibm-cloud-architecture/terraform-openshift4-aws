@@ -7,7 +7,7 @@ resource "null_resource" "openshift_installer" {
     command = "tar zxvf ${path.module}/openshift-install-linux-4*.tar.gz -C ${path.module}"
   }
   provisioner "local-exec" {
-    command = "rm -f ${path.module}/openshift-install-linux-4*.tar.gz robots*.txt*"
+    command = "rm -f ${path.module}/openshift-install-linux-4*.tar.gz ${path.module}/robots*.txt*"
   }
 }
 
@@ -24,7 +24,7 @@ resource "null_resource" "openshift_client" {
   }
 
   provisioner "local-exec" {
-    command = "rm -f ${path.module}/openshift-client-linux-4*.tar.gz robots*.txt*"
+    command = "rm -f ${path.module}/openshift-client-linux-4*.tar.gz ${path.module}/robots*.txt*"
   }
 }
 
@@ -87,15 +87,15 @@ networking:
   serviceNetwork:
   - ${var.service_network_cidr}
 platform:
-  aws: 
+  aws:
     region: ${data.aws_region.current.name}
 pullSecret: '${file(var.openshift_pull_secret)}'
-sshKey: '${tls_private_key.installkey.public_key_openssh}'  
+sshKey: '${tls_private_key.installkey.public_key_openssh}'
 EOF
 }
 
 resource "local_file" "install_config" {
-  content = "${data.template_file.install_config_yaml.rendered}" 
+  content = "${data.template_file.install_config_yaml.rendered}"
   filename = "${path.module}/install-config.yaml"
 }
 
