@@ -14,10 +14,6 @@ variable "default_tags" {
     default = {}
 }
 
-variable "openshift_installer_url" {
-  default = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
-}
-
 variable "infrastructure_id" {
   default = ""
 }
@@ -31,6 +27,10 @@ variable "domain" {
 variable "bootstrap_ip" {
 }
 
-variable "private_key_file" {
+variable "private_key" {
 
+}
+
+variable "private_key_file" {
+   default = "private_key"
 }

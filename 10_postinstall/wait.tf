@@ -3,15 +3,17 @@ locals {
   key = "${file("${var.private_key_file}")}"
 }
 
+resource "local_file" "ssh_key" {
+    content     = "${var.private_key}"
+    filename = "${path.module}/${var.private_key_file}"
+}
+
 # Wait for bootstrap complete
 resource "null_resource" "wait_bootstrap" {
-  depends_on = [
-    "null_resource.openshift_installer",
-    "null_resource.openshift_client"
-  ]
+  depends_on = [ "local_file.ssh_key" ]
 
   provisioner "local-exec" {
-    command = "while [ $bootdone -eq 0 ];do bootdone=$(ssh -i private_key -q core@10.10.10.253 [[ -f /opt/openshift/.bootkube.done ]] && echo "1" || echo "0");sleep 6;echo -n ".";done"
+    command = "sleep 600;while [ $bootdone -eq 0 ];do bootdone=$(ssh -i private_key -q core@10.10.10.253 [[ -f /opt/openshift/.bootkube.done ]] && echo "1" || echo "0");sleep 6;echo -n ".";done"
   }
 }
 
