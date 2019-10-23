@@ -8,7 +8,7 @@ resource "aws_route53_zone" "ocp_private" {
   tags = "${merge(
     var.default_tags, 
     map(
-      "Name", "${local.infrastructure_id}-int",
+      "Name", "${var.clustername}.${var.domain}.",
       "kubernetes.io/cluster/${local.infrastructure_id}", "owned"
     )
   )}"
