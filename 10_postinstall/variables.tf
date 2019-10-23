@@ -31,6 +31,6 @@ variable "domain" {
 variable "bootstrap_ip" {
 }
 
-variable "private_key_pem" {
+variable "private_key_file" {
 
 }
