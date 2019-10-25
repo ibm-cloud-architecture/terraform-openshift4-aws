@@ -7,7 +7,7 @@ resource "null_resource" "openshift_installer" {
     command = "tar zxvf ${path.module}/openshift-install-linux-4*.tar.gz -C ${path.module}"
   }
   provisioner "local-exec" {
-    command = "rm -f ${path.module}/openshift-install-linux-4*.tar.gz robots*.txt*"
+    command = "rm -f ${path.module}/openshift-install-linux-4*.tar.gz ${path.module}/robots*.txt*"
   }
 }
 
@@ -24,7 +24,7 @@ resource "null_resource" "openshift_client" {
   }
 
   provisioner "local-exec" {
-    command = "rm -f ${path.module}/openshift-client-linux-4*.tar.gz robots*.txt*"
+    command = "rm -f ${path.module}/openshift-client-linux-4*.tar.gz ${path.module}/robots*.txt*"
   }
 }
 
@@ -87,15 +87,15 @@ networking:
   serviceNetwork:
   - ${var.service_network_cidr}
 platform:
-  aws: 
+  aws:
     region: ${data.aws_region.current.name}
 pullSecret: '${file(var.openshift_pull_secret)}'
-sshKey: '${tls_private_key.installkey.public_key_openssh}'  
+sshKey: '${tls_private_key.installkey.public_key_openssh}'
 EOF
 }
 
 resource "local_file" "install_config" {
-  content = "${data.template_file.install_config_yaml.rendered}" 
+  content = "${data.template_file.install_config_yaml.rendered}"
   filename = "${path.module}/install-config.yaml"
 }
 
@@ -119,7 +119,7 @@ resource "null_resource" "generate_manifests" {
   }
 
   provisioner "local-exec" {
-    command = "mv install-config.yaml ${path.module}/${local.infrastructure_id}"
+    command = "mv ${path.module}/install-config.yaml ${path.module}/${local.infrastructure_id}"
   }
 
   provisioner "local-exec" {
@@ -140,6 +140,10 @@ resource "null_resource" "manifest_cleanup_control_plane_machineset" {
 
   provisioner "local-exec" {
     command = "rm -f ${path.module}/${local.infrastructure_id}/openshift/99_openshift-cluster-api_master-machines-*.yaml"
+  }
+
+  provisioner "local-exec" {
+    command = "infraID=`jq '.\"*installconfig.ClusterID\".InfraID' .openshift_install_state.json  | tr -d '\"'`;sed -i 's/$infraID/${local.infrastructure_id}/g'  ${path.module}/${local.infrastructure_id}/.openshift_install_state.json"
   }
 }
 
@@ -309,7 +313,9 @@ metadata:
 spec:
   replicas: 2
   endpointPublishingStrategy:
-    type: Private
+    type: LoadBalancerService
+    loadBalancer:
+      scope: Internal
 EOF
 }
 
