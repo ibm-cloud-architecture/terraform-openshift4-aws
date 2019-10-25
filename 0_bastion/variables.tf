@@ -13,20 +13,22 @@ variable "aws_azs" {
 variable "default_tags" {
   default = {}
 }
-variable "ocp_route53_private_zone_id" { default = "" }
+
 variable "infrastructure_id" { default = "" }
 variable "clustername" { default = "ocp4" }
-variable "public_vpc_id" { default = "vpc-0ea3d8e587d46b10a" }
+variable "vpc_cidr" { default = "172.31.0.0/16" }
 
 # Subnet Details
 variable "public_vpc_private_subnet_cidrs" {
+  description = "List of subnet CIDRs"
   type        = "list"
-  default     = [ "172.16.10.0/24" ,"172.16.11.0/24", "172.16.12.0/24" ]
+  default     = ["172.31.0.0/24", "172.31.1.0/24", "172.31.2.0/24" ]
 }
 
 variable "public_vpc_public_subnet_cidrs" {
+  description = "List of subnet CIDRs"
   type        = "list"
-  default     = [ "172.16.20.0/24", "172.16.21.0/24", "172.16.22.0/24" ]
+  default     = ["172.31.4.0/24", "172.31.5.0/24", "172.31.6.0/24" ]
 }
 
 variable "domain" {

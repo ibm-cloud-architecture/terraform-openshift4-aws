@@ -89,15 +89,52 @@ This project uses mainly Terraform as infrastructure management and installation
 
 This project installs the OpenShift 4 in several stages where each stage automates the provisioning of different components from infrastructure to OpenShift installation. The design is to provide the flexibility of different topology and infrastructure requirement.
 
-1. Provision Prviate Network.
-The script will create an AWS VPC and private subnets.
-Navigate to the git repository folder `1_private_network`
+1. Provision the public DMZ that includes the bastion host on which you will run the subsequent deployment of OpenShift 4 in AWS. This can be performed manually and then you can use the instruction in the above section to set it up or you can use the 0_bastion code to deploy this environment in AWS.
 
-```bash
-cd 1_private_network
-```
+2. Deploy the private network and OpenShift 4 cluster through the connection using transit gateway to the public environment.
+   You can use all the automation in a single deployment or you can use the individual folder in the git repository sequentially. The folders are:
 
-Create a `terraform.tfvars` file with following content:
+	- 1_private_network: Create the VPC and subnets for the OpenShift cluster
+	- 2_load_balancer: Create the system loadbalancer for the API and machine config operator
+	- 3_dns: generate a private hosted zone using route 53
+	- 4_security_group: defines network access rules for masters and workers
+	- 5_iam: define AWS authorities for the masters and workers
+	- 6_public_network: define hosted zone to the related public DMZ zone
+	- 7_transit_gw: creates and links transit gateway to connect the private VPC to the public DMZ
+	- 8_bootstrap: main module to provision the bootstrap node and generates OpenShift installation files and resources
+	- 9_control_plane: create master nodes manually (UPI) 
+	- 10_postinstall: creates and initiates worker nodes, fixes machine-config operator and creates kubeadmin user
+
+	You can also provision all the components in a single terraform main module, to do that, you need to use a terraform.tfvars, that is copied from the terraform.tfvars.example file. The variables related to that are:
+
+	Create a `terraform.tfvars` file with following content:
+
+	```
+	aws_region = "us-east-2"
+	aws_azs = ["a", "b", "c"]
+	default_tags = { "owner" = "aws-user01" }
+	infrastructure_id = "ocp4-abcde"
+	clustername = "ocp4"
+	private_vpc_cidr = "10.10.0.0/16"
+	vpc_private_subnet_cidrs = ["10.10.10.0/24","10.10.11.0/24","10.10.12.0/24"]
+	domain = "example.com"
+	# public_vpc_cidr = "172.16.0.0/16"
+	public_vpc_id = "vpc-0123456789"
+	public_vpc_private_subnet_cidrs = ["172.16.10.0/24","172.16.11.0/24","172.16.12.0/24"]
+	public_vpc_public_subnet_cidrs = ["172.16.20.0/24","172.16.21.0/24","172.16.22.0/24"]
+	ami = "ami-0bc59aaa7363b805d"
+	aws_access_key_id = "Aaccessid"
+	aws_secret_access_key = "accesssecret"
+	cluster_network_cidr = "192.168.0.0/17"
+	cluster_network_host_prefix = "23"
+	service_network_cidr = "192.168.128.0/24"
+	bootstrap = { type = "i3.xlarge" }
+	control_plane = { count = "3" , type = "m4.xlarge", disk = "120" }
+	use_worker_machinesets = true
+	# worker = {        count = "3" , type = "m4.large" , disk = "120" }
+	openshift_pull_secret = "./openshift_pull_secret.json"
+	openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+	```
 
 |name | required                        | value        |
 |----------------|------------|--------------|
@@ -123,150 +160,5 @@ Run the terraform provisioning:
 
 ```bash
 terraform plan
-terrafrm apply
-```
-
-2. Provision Load Balancers
-
-This stage provisions the OpenShift control plane load balancer and the target groups. It will take the vpc_id and subnets ids from the previous step.
-
-```bash
-cd 2_load_balancer
-
-cat > terraform.tfvars <<EOF
-aws_region = "us-east-2"
-default_tags = { owner = "gchen" }
-infrastructure_id = "ocp4chen-aws"
-clustername = "ocp4chen"
-private_vpc_id = "vpc-0eec91d36e66950f3"
-private_vpc_private_subnet_ids = [
-  "subnet-08fa6e0ab331804ee",
-  "subnet-0569eca464249d117",
-  "subnet-0d5e8d8a9fc6f6187",
-]
-EOF
-
-terraform init
-terraform plan
 terraform apply
-```
-
-
-3. Setup Route53 DNS Zones
-OpenShift requires the private zone setup in Route53. This zone maps to the internal control plane ELB.
-
-```bash
-cd 3_dns
-
-cat > terraform.tfvars <<EOF
-aws_region = "us-east-2"
-default_tags = { owner = "gchen" }
-infrastructure_id = "ocp4chen-aws"
-clustername = "ocp4chen"
-domain = "kpak.tk"
-private_vpc_id = "vpc-0eec91d36e66950f3"
-ocp_control_plane_lb_int_arn = "arn:aws:elasticloadbalancing:us-east-2:353456611220:loadbalancer/net/ocp4chen-aws-int/0272df577ba9a2c3"
-EOF
-
-terraform init
-terraform plan
-terraform apply
-```
-
-4. Add security groups
-
-```bash
-cd 4_security_group
-
-cat > terraform.tfvars <<EOF
-aws_region = "us-east-2"
-default_tags = { owner = "gchen" }
-infrastructure_id = "ocp4chen-aws"
-clustername = "ocp4chen"
-private_vpc_id = "vpc-0eec91d36e66950f3"
-EOF
-
-terraform init
-terraform plan
-terraform apply
-```
-
-5. Add IAM roles and instances
-
-```bash
-cd 5_iam
-
-cat > terraform.tfvars <<EOF
-aws_region = "us-east-2"
-default_tags = { owner = "gchen" }
-infrastructure_id = "ocp4chen-aws"
-clustername = "ocp4chen"
-EOF
-
-terraform init
-terraform plan
-terraform apply
-```
-
-6. Create Public VPC
-Acting as DMZ zone.
-
-```bash
-cd 6_public_network
-
-cat > terraform.tfvars <<EOF
-aws_region = "us-east-2"
-default_tags = { owner = "gchen" }
-infrastructure_id = "ocp4chen-aws"
-clustername = "ocp4chen"
-domain = "kpak.tk"
-vpc_cidr = "172.21.0.0/16"
-public_vpc_private_subnet_cidrs = ["172.21.0.0/24", "172.21.1.0/24", "172.21.2.0/24" ]
-public_vpc_public_subnet_cidrs = ["172.21.4.0/24", "172.21.5.0/24", "172.21.6.0/24" ]
-EOF
-
-terraform init
-terraform plan
-terraform apply
-```
-
-7. Setup Transit Gateway
-This will forward the traffic between DMZ (public VPC) and the OpenShift private network VPC.
-
-```bash
-cd 7_transit_gw
-
-cat > terraform.tfvars <<EOF
-aws_region = "us-east-2"
-default_tags = { owner = "gchen" }
-infrastructure_id = "ocp4chen-aws"
-clustername = "ocp4chen"
-private_vpc_id = "vpc-0eec91d36e66950f3"
-private_vpc_private_subnet_ids = [
-  "subnet-08fa6e0ab331804ee",
-  "subnet-0569eca464249d117",
-  "subnet-0d5e8d8a9fc6f6187",
-]
-public_vpc_id = "vpc-0c8ca2ee71f07f9da"
-public_vpc_private_subnet_ids = [
-  "subnet-09c3879b840105048",
-  "subnet-0b485f1485e968131",
-  "subnet-0d73cf16506341597",
-]
-public_vpc_public_subnet_ids = [
-  "subnet-039003cc21089499e",
-  "subnet-04b7f917e0475dec7",
-  "subnet-028302a8c9f09c6bf",
-]
-EOF
-
-terraform init
-terraform plan
-terraform apply
-```
-
-8. Install OpenShift with bootnode
-
-```bash
-
 ```

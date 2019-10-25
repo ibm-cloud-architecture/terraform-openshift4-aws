@@ -16,3 +16,4 @@ resource "aws_vpc" "ocp_public_vpc" {
     )
   )}"
 }
+
