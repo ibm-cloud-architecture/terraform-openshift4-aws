@@ -1,5 +1,5 @@
 locals {
-  infrastructure_id = "${var.clustername}-vbd01"
+  infrastructure_id = "${var.infrastructure_id != "" ? "${var.infrastructure_id}" : "${var.clustername}-${random_id.clusterid.hex}"}"
 }
 
 module "private_network" {
@@ -176,21 +176,4 @@ module "control_plane" {
   ocp_route53_private_zone_id = "${module.dns.ocp_route53_private_zone_id}"
   master_ign_64 = "${module.bootstrap.master_ign_64}"
   worker_ign_64 = "${module.bootstrap.worker_ign_64}"
-}
-# ---------------------------
-#     "${module.control_plane.int_lb_url}"
-# ---------------------------
-module "postinstall" {
-  source = "./10_postinstall"
-
-  aws_region = "${var.aws_region}"
-  aws_azs = "${var.aws_azs}"
-  default_tags = "${var.default_tags}"
-
-  infrastructure_id = "${local.infrastructure_id}"
-  clustername = "${var.clustername}"
-  domain = "${var.domain}"
-
-  bootstrap_ip = "${module.bootstrap.bootstrap_ip}"
-  private_key = "${module.bootstrap.private_ssh_key}"
 }
