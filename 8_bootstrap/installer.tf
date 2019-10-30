@@ -167,7 +167,7 @@ resource "local_file" "worker_machineset" {
     "null_resource.manifest_cleanup_worker_machineset"
   ]
 
-  filename = "${path.module}/${local.infrastructure_id}/manifests/zz_openshift-cluster-api_worker-machineset-${count.index}.yaml"
+  filename = "${path.module}/${local.infrastructure_id}/openshift/99_openshift-cluster-api_worker-machineset-${count.index}.yaml"
 
   content = <<-EOF
 apiVersion: machine.openshift.io/v1beta1
