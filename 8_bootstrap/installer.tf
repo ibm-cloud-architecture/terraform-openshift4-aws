@@ -141,10 +141,6 @@ resource "null_resource" "manifest_cleanup_control_plane_machineset" {
   provisioner "local-exec" {
     command = "rm -f ${path.module}/${local.infrastructure_id}/openshift/99_openshift-cluster-api_master-machines-*.yaml"
   }
-
-  provisioner "local-exec" {
-    command = "infraID=`jq '.\"*installconfig.ClusterID\".InfraID' .openshift_install_state.json  | tr -d '\"'`;sed -i 's/$infraID/${local.infrastructure_id}/g'  ${path.module}/${local.infrastructure_id}/.openshift_install_state.json"
-  }
 }
 
 # remove these machinesets, we will rewrite them using the security group and subnets that we created
@@ -163,9 +159,10 @@ resource "null_resource" "manifest_cleanup_worker_machineset" {
   }
 }
 
+## Moving the machineset to the manifests dir
 resource "local_file" "worker_machineset" {
   count = "${var.use_worker_machinesets ? length(var.aws_azs) : 0}"
-
+  file_permission = "0644"
   depends_on = [
     "null_resource.manifest_cleanup_worker_machineset"
   ]
@@ -247,7 +244,7 @@ resource "local_file" "cluster_infrastructure_config" {
   depends_on = [
     "null_resource.generate_manifests"
   ]
-
+  file_permission = "0644"
   filename = "${path.module}/${local.infrastructure_id}/manifests/cluster-infrastructure-02-config.yml"
 
   content = <<EOF
@@ -277,7 +274,7 @@ resource "local_file" "cluster_dns_config" {
   depends_on = [
     "null_resource.generate_manifests"
   ]
-
+  file_permission = "0644"
   filename = "${path.module}/${local.infrastructure_id}/manifests/cluster-dns-02-config.yml"
 
   content = <<EOF
@@ -294,57 +291,56 @@ spec:
       kubernetes.io/cluster/${local.infrastructure_id}: owned
 status: {}
 EOF
-
 }
 
 # make the ingress controller private only loadbalancer, use privatelink to expose it from another public vpc later
-resource "local_file" "cluster_ingress_config" {
-  depends_on = [
-    "null_resource.generate_manifests"
-  ]
-
-  filename = "${path.module}/${local.infrastructure_id}/openshift/99_default_ingress_controller.yml"
-  content = <<EOF
-apiVersion: operator.openshift.io/v1
-kind: IngressController
-metadata:
-  name: default
-  namespace: openshift-ingress-operator
-spec:
-  replicas: 2
-  endpointPublishingStrategy:
-    type: LoadBalancerService
-    loadBalancer:
-      scope: Internal
-EOF
-}
+#resource "local_file" "cluster_ingress_config" {
+#  depends_on = [
+#    "null_resource.generate_manifests"
+#  ]
+#  file_permission = "0644"
+#  filename = "${path.module}/${local.infrastructure_id}/openshift/99_default_ingress_controller.yml"
+#  content = <<EOF
+#apiVersion: operator.openshift.io/v1
+#kind: IngressController
+#metadata:
+#  name: default
+#  namespace: openshift-ingress-operator
+#spec:
+#  replicas: 2
+#  endpointPublishingStrategy:
+#    type: LoadBalancerService
+#    loadBalancer:
+#      scope: Internal
+#EOF
+#}
 
 # create a private network nlb for the default router
-resource "local_file" "cluster_ingress_service" {
-  depends_on = [
-    "null_resource.generate_manifests"
-  ]
-
-  filename = "${path.module}/${local.infrastructure_id}/openshift/99_default_ingress_service.yml"
-  content = <<EOF
-apiVersion: v1
-kind: Service
-metadata:
-  name: router-default
-  namespace: openshift-ingress
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
-spec:
-  externalTrafficPolicy: Local
-  type: LoadBalancer
-  ports:
-  - port: 443
-    protocol: TCP
-  selector:
-    ingresscontroller.operator.openshift.io/deployment-ingresscontroller: default
-EOF
-}
+#resource "local_file" "cluster_ingress_service" {
+#  depends_on = [
+#    "null_resource.generate_manifests"
+#  ]
+#  file_permission = "0644"
+#  filename = "${path.module}/${local.infrastructure_id}/openshift/99_default_ingress_service.yml"
+#  content = <<EOF
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: router-default
+#  namespace: openshift-ingress
+#  annotations:
+#    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+#    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+#spec:
+#  externalTrafficPolicy: Local
+#  type: LoadBalancer
+#  ports:
+#  - port: 443
+#    protocol: TCP
+#  selector:
+#    ingresscontroller.operator.openshift.io/deployment-ingresscontroller: default
+#EOF
+#}
 
 # build the bootstrap ignition config
 resource "null_resource" "generate_ignition_config" {
@@ -354,8 +350,8 @@ resource "null_resource" "generate_ignition_config" {
     "local_file.worker_machineset",
     "local_file.cluster_infrastructure_config",
     "local_file.cluster_dns_config",
-    "local_file.cluster_ingress_config",
-    "local_file.cluster_ingress_service",
+#    "local_file.cluster_ingress_config",
+#    "local_file.cluster_ingress_service",
   ]
 
   triggers = {
@@ -363,7 +359,7 @@ resource "null_resource" "generate_ignition_config" {
     local_file_install_config = "${local_file.install_config.id}"
     local_file_infrastructure_config = "${local_file.cluster_infrastructure_config.id}"
     local_file_dns_config = "${local_file.cluster_dns_config.id}"
-    local_file_ingress_config = "${local_file.cluster_ingress_config.id}"
+#    local_file_ingress_config = "${local_file.cluster_ingress_config.id}"
     local_file_worker_machineset = "${join(",", local_file.worker_machineset.*.id)}"
   }
 
