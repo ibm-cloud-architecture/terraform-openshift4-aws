@@ -16,7 +16,7 @@ variable "default_tags" {
 variable "ocp_route53_private_zone_id" { default = "" }
 variable "infrastructure_id" { default = "" }
 variable "clustername" { default = "ocp4" }
-variable "public_vpc_id" { default = "vpc-0ea3d8e587d46b10a" }
+variable "public_vpc_id" { }
 
 # Subnet Details
 variable "public_vpc_private_subnet_cidrs" {
@@ -30,4 +30,12 @@ variable "public_vpc_public_subnet_cidrs" {
 }
 
 variable "domain" {
+}
+
+variable "public_vpc_private_subnet_ids" {
+  type = "list"
+}
+
+variable "public_vpc_public_subnet_ids" {
+  type = "list"
 }
