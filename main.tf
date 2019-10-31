@@ -94,6 +94,8 @@ module "public_network" {
   ocp_route53_private_zone_id = "${module.dns.ocp_route53_private_zone_id}"
   public_vpc_private_subnet_cidrs = "${var.public_vpc_private_subnet_cidrs}"
   public_vpc_public_subnet_cidrs = "${var.public_vpc_public_subnet_cidrs}"
+  public_vpc_private_subnet_ids = "${var.public_vpc_private_subnet_ids}"
+  public_vpc_public_subnet_ids = "${var.public_vpc_public_subnet_ids}"
   domain = "${var.domain}"
 }
 # ---------------------------

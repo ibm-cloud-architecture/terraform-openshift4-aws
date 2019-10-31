@@ -22,3 +22,13 @@ use_worker_machinesets = true
 # worker = {        count = "3" , type = "m4.large" , disk = "120" }
 openshift_pull_secret = "./openshift_pull_secret.json"
 openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+public_vpc_private_subnet_ids = [
+"subnet-0556e9da906c48b09",
+"subnet-03eb22e1bb944d5a0",
+"subnet-014e8063787f5bd0c"
+]
+public_vpc_public_subnet_ids = [
+"subnet-0e0eea1735086ae90",
+"subnet-086c2117dde507c69",
+"subnet-02a76d7dbb84a5070"
+]
