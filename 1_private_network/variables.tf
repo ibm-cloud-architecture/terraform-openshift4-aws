@@ -28,6 +28,7 @@ variable "vpc_private_subnet_cidrs" {
   type        = "list"
   default     = ["10.10.10.0/24", "10.10.11.0/24", "10.10.12.0/24" ]
 }
+
 variable "vpc_public_subnet_cidrs" {
   description = "List of subnet CIDRs"
   type        = "list"
