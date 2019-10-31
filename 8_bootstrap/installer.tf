@@ -6,6 +6,7 @@ resource "null_resource" "openshift_installer" {
   provisioner "local-exec" {
     command = "tar zxvf ${path.module}/openshift-install-linux-4*.tar.gz -C ${path.module}"
   }
+
   provisioner "local-exec" {
     command = "rm -f ${path.module}/openshift-install-linux-4*.tar.gz ${path.module}/robots*.txt*"
   }
@@ -28,21 +29,13 @@ resource "null_resource" "openshift_client" {
   }
 }
 
-data "http" "iam_role_name" {
-  url = "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
-}
-
-data "http" "instance_profile" {
-  url = "http://169.254.169.254/latest/meta-data/iam/security-credentials/${data.http.iam_role_name.body}"
-}
-
 resource "null_resource" "aws_credentials" {
   provisioner "local-exec" {
     command = "mkdir -p ~/.aws"
   }
 
   provisioner "local-exec" {
-    command = "echo '${var.aws_access_key_id != "" ? data.template_file.aws_credentials.rendered : data.template_file.aws_credentials_default.rendered}' > ~/.aws/credentials"
+    command = "echo '${data.template_file.aws_credentials.rendered}' > ~/.aws/credentials"
   }
 }
 
@@ -54,15 +47,6 @@ aws_secret_access_key = ${var.aws_secret_access_key}
 EOF
 }
 
-
-data "template_file" "aws_credentials_default" {
-  template = <<-EOF
-[default]
-aws_access_key_id = ${jsondecode(data.http.instance_profile.body)["AccessKeyId"]}
-aws_secret_access_key = ${jsondecode(data.http.instance_profile.body)["SecretAccessKey"]}
-aws_session_token = ${jsondecode(data.http.instance_profile.body)["Token"]}
-EOF
-}
 
 data "template_file" "install_config_yaml" {
   template = <<-EOF
