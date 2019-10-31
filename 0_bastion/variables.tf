@@ -13,7 +13,9 @@ variable "aws_azs" {
 variable "default_tags" {
   default = {}
 }
-
+variable "ami_owner" {}
+variable "key_name" {} 
+variable "bastion_ami" {}
 variable "infrastructure_id" { default = "" }
 variable "clustername" { default = "ocp4" }
 variable "vpc_cidr" { default = "172.31.0.0/16" }
