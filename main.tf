@@ -83,41 +83,6 @@ module "iam" {
 #     "${module.iam.ocp_master_instance_profile_id}"
 #     "${module.iam.ocp_worker_instance_profile_id}"
 # ---------------------------
-module "public_network" {
-  source = "./6_public_network"
-  aws_region = "${var.aws_region}"
-  aws_azs = "${var.aws_azs}"
-  default_tags = "${var.default_tags}"
-  infrastructure_id = "${local.infrastructure_id}"
-  clustername = "${var.clustername}"
-  public_vpc_id = "${var.public_vpc_id}"
-  ocp_route53_private_zone_id = "${module.dns.ocp_route53_private_zone_id}"
-  public_vpc_private_subnet_cidrs = "${var.public_vpc_private_subnet_cidrs}"
-  public_vpc_public_subnet_cidrs = "${var.public_vpc_public_subnet_cidrs}"
-  public_vpc_private_subnet_ids = "${var.public_vpc_private_subnet_ids}"
-  public_vpc_public_subnet_ids = "${var.public_vpc_public_subnet_ids}"
-  domain = "${var.domain}"
-}
-# ---------------------------
-#     "${module.public_network.clustername}"
-#     "${module.public_network.infrastructure_id}"
-#     "${module.public_network.public_vpc_id}"
-#     "${module.public_network.public_vpc_public_subnet_ids}"
-#     "${module.public_network.public_vpc_private_subnet_ids}"
-# ---------------------------
-module "transit_gw" {
-  source = "./7_transit_gw"
-  aws_region = "${var.aws_region}"
-  default_tags = "${var.default_tags}"
-  clustername = "${var.clustername}"
-  infrastructure_id = "${local.infrastructure_id}"
-  private_vpc_id = "${module.private_network.private_vpc_id}"
-  public_vpc_id = "${module.public_network.public_vpc_id}"
-  private_vpc_private_subnet_ids = "${module.private_network.private_vpc_private_subnet_ids}"
-  public_vpc_private_subnet_ids = "${module.public_network.public_vpc_private_subnet_ids}"
-  public_vpc_public_subnet_ids = "${module.public_network.public_vpc_public_subnet_ids}"
-}
-
 module "bootstrap" {
   source = "./8_bootstrap"
   aws_region = "${var.aws_region}"
