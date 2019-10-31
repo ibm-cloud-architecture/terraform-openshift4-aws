@@ -8,8 +8,8 @@ vpc_private_subnet_cidrs = ["10.10.10.0/24","10.10.11.0/24","10.10.12.0/24"]
 domain = "example.com"
 # public_vpc_cidr = "172.16.0.0/16"
 public_vpc_id = "vpc-0123456789"
-public_vpc_private_subnet_cidrs = ["172.16.10.0/24","172.16.11.0/24","172.16.12.0/24"]
-public_vpc_public_subnet_cidrs = ["172.16.20.0/24","172.16.21.0/24","172.16.22.0/24"]
+vpc_private_subnet_cidrs = ["172.16.10.0/24","172.16.11.0/24","172.16.12.0/24"]
+vpc_public_subnet_cidrs = ["172.16.20.0/24","172.16.21.0/24","172.16.22.0/24"]
 ami = "ami-0bc59aaa7363b805d"
 aws_access_key_id = "Aaccessid"
 aws_secret_access_key = "accesssecret"
@@ -22,12 +22,12 @@ use_worker_machinesets = true
 # worker = {        count = "3" , type = "m4.large" , disk = "120" }
 openshift_pull_secret = "./openshift_pull_secret.json"
 openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
-public_vpc_private_subnet_ids = [
+vpc_private_subnet_ids = [
 "subnet-0556e9da906c48b09",
 "subnet-03eb22e1bb944d5a0",
 "subnet-014e8063787f5bd0c"
 ]
-public_vpc_public_subnet_ids = [
+vpc_public_subnet_ids = [
 "subnet-0e0eea1735086ae90",
 "subnet-086c2117dde507c69",
 "subnet-02a76d7dbb84a5070"
