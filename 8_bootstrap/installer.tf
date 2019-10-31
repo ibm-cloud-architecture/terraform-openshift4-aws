@@ -426,3 +426,16 @@ data "local_file" "cluster_infrastructure" {
 
   filename = "${path.module}/${local.infrastructure_id}/manifests/cluster-infrastructure-02-config.yml"
 }
+
+resource "null_resource" "get_auth_config" {
+  depends_on = [ "null_resource.generate_ignition_config" ]
+  provisioner "local-exec" {
+     when = "create"
+     command = "cp ${path.module}/${local.infrastructure_id}/auth/* ${path.root}/ "
+  }
+  provisioner "local-exec" {
+     when = "destroy"
+     command = "rm ${path.root}/kubeconfig ${path.root}/kubeadmin_password "
+  }
+}
+
