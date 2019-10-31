@@ -278,53 +278,53 @@ EOF
 }
 
 # make the ingress controller private only loadbalancer, use privatelink to expose it from another public vpc later
-#resource "local_file" "cluster_ingress_config" {
-#  depends_on = [
-#    "null_resource.generate_manifests"
-#  ]
-#  file_permission = "0644"
-#  filename = "${path.module}/${local.infrastructure_id}/openshift/99_default_ingress_controller.yml"
-#  content = <<EOF
-#apiVersion: operator.openshift.io/v1
-#kind: IngressController
-#metadata:
-#  name: default
-#  namespace: openshift-ingress-operator
-#spec:
-#  replicas: 2
-#  endpointPublishingStrategy:
-#    type: LoadBalancerService
-#    loadBalancer:
-#      scope: Internal
-#EOF
-#}
+resource "local_file" "cluster_ingress_config" {
+  depends_on = [
+    "null_resource.generate_manifests"
+  ]
+  file_permission = "0644"
+  filename = "${path.root}/ingress_controller.yml"
+  content = <<EOF
+apiVersion: operator.openshift.io/v1
+kind: IngressController
+metadata:
+  name: default
+  namespace: openshift-ingress-operator
+spec:
+  replicas: 2
+  endpointPublishingStrategy:
+    type: LoadBalancerService
+    loadBalancer:
+      scope: Internal
+EOF
+}
 
 # create a private network nlb for the default router
-#resource "local_file" "cluster_ingress_service" {
-#  depends_on = [
-#    "null_resource.generate_manifests"
-#  ]
-#  file_permission = "0644"
-#  filename = "${path.module}/${local.infrastructure_id}/openshift/99_default_ingress_service.yml"
-#  content = <<EOF
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: router-default
-#  namespace: openshift-ingress
-#  annotations:
-#    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-#    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
-#spec:
-#  externalTrafficPolicy: Local
-#  type: LoadBalancer
-#  ports:
-#  - port: 443
-#    protocol: TCP
-#  selector:
-#    ingresscontroller.operator.openshift.io/deployment-ingresscontroller: default
-#EOF
-#}
+resource "local_file" "cluster_ingress_service" {
+  depends_on = [
+    "null_resource.generate_manifests"
+  ]
+  file_permission = "0644"
+  filename = "${path.root}/ingress_service.yml"
+  content = <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: router-default
+  namespace: openshift-ingress
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+spec:
+  externalTrafficPolicy: Local
+  type: LoadBalancer
+  ports:
+  - port: 443
+    protocol: TCP
+  selector:
+    ingresscontroller.operator.openshift.io/deployment-ingresscontroller: default
+EOF
+}
 
 # build the bootstrap ignition config
 resource "null_resource" "generate_ignition_config" {
