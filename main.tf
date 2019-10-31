@@ -15,12 +15,14 @@ module "private_network" {
   clustername = "${var.clustername}"
   vpc_cidr = "${var.private_vpc_cidr}"
   vpc_private_subnet_cidrs = "${var.vpc_private_subnet_cidrs}"
+  vpc_public_subnet_cidrs = "${var.vpc_public_subnet_cidrs}"
 }
 # ---------------------------
 #     "${module.private_network.infrastructure_id}"
 #     "${module.private_network.clustername}"
 #     "${module.private_network.private_vpc_id}"
 #     "${module.private_network.private_vpc_private_subnet_ids}"
+#     "${module.private_network.private_vpc_public_subnet_ids}"
 # ---------------------------
 module "load_balancer" {
   source = "./2_load_balancer"
