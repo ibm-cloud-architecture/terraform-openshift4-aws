@@ -112,7 +112,10 @@ resource "aws_subnet" "ocp_pub_subnet" {
   tags = "${merge(
     var.default_tags,
     map(
-      "Name", "${format("${local.infrastructure_id}-pub-%s-pub", format("%s%s", element(list(var.aws_region), count.index), element(var.aws_azs, count.index))) }"
+      "Name", "${format("${local.infrastructure_id}-pub-%s-pub", format("%s%s", element(list(var.aws_region), count.index), element(var.aws_azs, count.index))) }",
+      "kubernetes.io/cluster/${local.infrastructure_id}", "shared",
+      "kubernetes.io/role/elb", "1",
+      "KubernetesCluster", "${local.infrastructure_id}"
     )
   )}"
 }
