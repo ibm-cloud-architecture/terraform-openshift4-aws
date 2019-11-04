@@ -23,14 +23,3 @@ variable "clustername" { default = "ocp4" }
 variable "domain" {
     default = "example.com"
 }
-
-variable "bootstrap_ip" {
-}
-
-variable "private_key" {
-
-}
-
-variable "private_key_file" {
-   default = "private_key"
-}

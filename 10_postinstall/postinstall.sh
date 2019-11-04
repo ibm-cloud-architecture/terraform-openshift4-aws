@@ -1,26 +1,65 @@
 #!/bin/bash
 # Assumptions
-# - IP addr of bootstrap $bootIP
-# - SSH key for bootstrap $sshkey
-# - the oc command
-# - the kubeconfig
-# - 
+# aws, jq are installed
+# checking aws
+echo "Checking Classic load balancers for Kubernetes created elb"
+clusterid=$1 # "ocp42ss-gse01"
+clustername=$2 #"ocp42ss"
+domain=$3 # "vbudi.cf"
 
-echo "Bootstrap complete"
+if [ -z $domain ]; then
+  echo "Arguments are clusterID clusterName Domain"
+  exit 999
+fi
 
-export KUBECONFIG=$(find / -name kubeconfig 2>/dev/null | tail -1)
+found=0
+created_lb=""
 
-curmco=$(oc get machineconfig | grep "rendered-master" | tail -1 | awk '{print $1}')
-curuid=$(oc get machineconfig ${curmco} -o yaml | grep "   uid:" | awk '{print $2}')
+while [ $found -eq 0 ]; do
+  lb_list=$(aws elb describe-load-balancers | jq '."LoadBalancerDescriptions" | .[]."LoadBalancerName"')
 
-cd opt/openshift/openshift
+  if [ -z $lb_list ]; then
+    echo "Empty"
+    sleep 60
+  else
+    for lbname in $lb_list; do
+      lbname=$(echo $lbname | tr -d '"')
+      jqargs=".\"TagDescriptions\" | .[].Tags | .[] | select(.Key == \"kubernetes.io/cluster/${clusterid}\") | .Value"
+      klval=$(aws elb describe-tags --load-balancer-names ${lbname} | jq "$jqargs" )
+      if [ $klval = '"owned"' ]; then
+        found=1
+        created_lb=$lbname
+      else
+        sleep 60
+      fi
+    done
+  fi
+done
 
-sed "s/uid: \"\"/uid: \"$curuid\"/g" -i rendered-master-*.yaml
+lbzone=$(aws elb describe-load-balancers --load-balancer-names $created_lb | jq '."LoadBalancerDescriptions" | .[]."CanonicalHostedZoneNameID"' | tr -d '"')
+lbhost=$(aws elb describe-load-balancers --load-balancer-names $created_lb | jq '."LoadBalancerDescriptions" | .[]."CanonicalHostedZoneName"' | tr -d '"')
 
-oc apply -f 99_openshift-cluster-api_worker-user-data-secret.yaml
-oc apply -f 99_openshift-cluster-api_worker-machineset-0.yaml
-oc apply -f 99_openshift-cluster-api_worker-machineset-1.yaml
-oc apply -f 99_openshift-cluster-api_worker-machineset-2.yaml
+echo $lbzone $lbhost
 
-oc apply -f 99_kubeadmin-password-secret.yaml
+rte53args=".HostedZones | .[] |  select(.Name == \"${domain}.\") | .Id"
+rte53zone=$(aws route53 list-hosted-zones | jq "$rte53args" | tr -d '"')
+cat <<EOF >createRS.json
+{
+     "Comment": "Creating Alias resource record sets in Route 53",
+     "Changes": [{
+                "Action": "CREATE",
+                "ResourceRecordSet": {
+                            "Name": "*.apps.${clustername}.${domain}",
+                            "Type": "A",
+                            "AliasTarget":{
+                                    "HostedZoneId": "$lbzone",
+                                    "DNSName": "$lbhost",
+                                    "EvaluateTargetHealth": false
+                              }}
+                          }]
+}
+EOF
 
+aws route53 change-resource-record-sets --hosted-zone-id $rte53zone --change-batch file://createRS.json
+
+exit 0
