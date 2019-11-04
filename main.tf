@@ -86,7 +86,7 @@ module "iam" {
 #     "${module.iam.ocp_worker_instance_profile_id}"
 # ---------------------------
 module "bootstrap" {
-  source = "./8_bootstrap"
+  source = "./6_bootstrap"
   aws_region = "${var.aws_region}"
   aws_azs = "${var.aws_azs}"
   default_tags = "${var.default_tags}"
@@ -125,7 +125,7 @@ module "bootstrap" {
 #     "${module.bootstrap.public_ssh_key}"
 # ---------------------------
 module "control_plane" {
-  source = "./9_control_plane"
+  source = "./7_control_plane"
   aws_region = "${var.aws_region}"
   aws_azs = "${var.aws_azs}"
   default_tags = "${var.default_tags}"
@@ -150,3 +150,15 @@ module "control_plane" {
   master_ign_64 = "${module.bootstrap.master_ign_64}"
   worker_ign_64 = "${module.bootstrap.worker_ign_64}"
 }
+# module post install - waiting for aws load balancer
+#
+module "postinstall" {
+  source = "./8_postinstall"
+  aws_region = "${var.aws_region}"
+  aws_azs = "${var.aws_azs}"
+  default_tags = "${var.default_tags}"
+  infrastructure_id = "${local.infrastructure_id}"
+  clustername = "${var.clustername}"
+  domain = "${var.domain}"
+}
+
