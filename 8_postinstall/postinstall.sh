@@ -37,7 +37,7 @@ while [ $found -eq 0 ]; do
     done
   fi
   count=$((count-1))
-  if [ $count -eq 0 ]; do
+  if [ $count -eq 0 ]; then
     echo "Giving up after 100 minutes"
     exit 999
   fi
