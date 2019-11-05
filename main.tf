@@ -150,6 +150,10 @@ module "control_plane" {
   master_ign_64 = "${module.bootstrap.master_ign_64}"
   worker_ign_64 = "${module.bootstrap.worker_ign_64}"
 }
+# ---------------------------
+#     "${module.control_plane.clustername}"
+#     "${module.control_plane.infrastructure_id}"
+# ---------------------------
 # module post install - waiting for aws load balancer
 #
 module "postinstall" {
@@ -157,8 +161,8 @@ module "postinstall" {
   aws_region = "${var.aws_region}"
   aws_azs = "${var.aws_azs}"
   default_tags = "${var.default_tags}"
-  infrastructure_id = "${local.infrastructure_id}"
-  clustername = "${var.clustername}"
+  infrastructure_id = "${module.control_plane.infrastructure_id}"
+  clustername = "${module.control_plane.clustername}"
   domain = "${var.domain}"
 }
 
