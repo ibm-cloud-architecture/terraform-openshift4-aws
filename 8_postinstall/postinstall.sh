@@ -14,12 +14,13 @@ fi
 
 found=0
 created_lb=""
+count=100
 
 while [ $found -eq 0 ]; do
   lb_list=$(aws elb describe-load-balancers | jq '."LoadBalancerDescriptions" | .[]."LoadBalancerName"')
 
   if [ -z $lb_list ]; then
-    echo "Empty"
+    echo "Empty - $count retries left"
     sleep 60
   else
     for lbname in $lb_list; do
@@ -30,9 +31,15 @@ while [ $found -eq 0 ]; do
         found=1
         created_lb=$lbname
       else
+        echo "Empty - $count retries left"
         sleep 60
       fi
     done
+  fi
+  count=$((count-1))
+  if [ $count -eq 0 ]; do
+    echo "Giving up after 100 minutes"
+    exit 999
   fi
 done
 
