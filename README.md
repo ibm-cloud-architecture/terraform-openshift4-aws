@@ -91,23 +91,16 @@ This project installs the OpenShift 4 in several stages where each stage automat
 
 1. The deployment assumes that you run the terraform deployment from a Linux based environment. This can be performed on an AWS-linux EC2 instance. The deployment machine has the following requirements:
 
-  - git cli
-  - terraform 0.12 or later
-  - aws client
-  - jq command
-  - wget command
-  - common AWS environment variables:
-
-  ```
-  $ export AWS_ACCESS_KEY_ID=AKEXAMPLE
-  $ export AWS_SECRET_ACCESS_KEY=abcdeabcdeabcde
-  $ export AWS_DEFAULT_REGION=us-east-2
-  ```
+    - git cli
+    - terraform 0.12 or later
+    - aws client
+    - jq command
+    - wget command
 
 2. Deploy the private network and OpenShift 4 cluster through the connection using transit gateway to the public environment.
    You can use all the automation in a single deployment or you can use the individual folder in the git repository sequentially. The folders are:
 
-	- 1_private_network: Create the VPC and subnets for the OpenShift cluster
+ 	- 1_private_network: Create the VPC and subnets for the OpenShift cluster
 	- 2_load_balancer: Create the system loadbalancer for the API and machine config operator
 	- 3_dns: generate a private hosted zone using route 53
 	- 4_security_group: defines network access rules for masters and workers
@@ -120,7 +113,7 @@ This project installs the OpenShift 4 in several stages where each stage automat
 
 	Create a `terraform.tfvars` file with following content:
 
-	```
+  ```
   aws_region = "us-east-2"
   aws_azs = ["a", "b", "c"]
   default_tags = { "owner" = "ocp42" }
@@ -142,7 +135,7 @@ This project installs the OpenShift 4 in several stages where each stage automat
   service_network_cidr = "192.168.128.0/24"
   openshift_pull_secret = "./openshift_pull_secret.json"
   openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
-	```
+  ```
 
 |name | required                        | value        |
 |----------------|------------|--------------|
