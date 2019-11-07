@@ -107,7 +107,7 @@ This project installs the OpenShift 4 in several stages where each stage automat
 	- 5_iam: define AWS authorities for the masters and workers
 	- 6_bootstrap: main module to provision the bootstrap node and generates OpenShift installation files and resources
 	- 7_control_plane: create master nodes manually (UPI)
-	- 8_postinstall: creates and initiates worker nodes, fixes machine-config operator and creates kubeadmin user
+	- 8_postinstall: defines public DNS for application load balancer (optional)
 
 	You can also provision all the components in a single terraform main module, to do that, you need to use a terraform.tfvars, that is copied from the terraform.tfvars.example file. The variables related to that are:
 
@@ -127,17 +127,11 @@ This project installs the OpenShift 4 in several stages where each stage automat
   control_plane = { count = "3" , type = "m4.xlarge", disk = "120" }
   use_worker_machinesets = true
   # worker = {        count = "3" , type = "m4.large" , disk = "120" }
-  private_vpc_cidr = "10.10.0.0/16"
-  vpc_private_subnet_cidrs = ["10.10.10.0/24","10.10.11.0/24","10.10.12.0/24"]
-  vpc_public_subnet_cidrs = ["10.10.20.0/24","10.10.21.0/24","10.10.22.0/24"]
-  cluster_network_cidr = "192.168.0.0/17"
-  cluster_network_host_prefix = "23"
-  service_network_cidr = "192.168.128.0/24"
   openshift_pull_secret = "./openshift_pull_secret.json"
   openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
   ```
 
-|name | required                        | value        |
+|name | required                        | description and value        |
 |----------------|------------|--------------|
 | `aws_region`   | no           | AWS region that the VPC will be created in.  By default, uses `us-east-2`.  Note that for an HA installation, the AWS selected region should have at least 3 availability zones. |
 | `aws_azs`          | no           | AWS Availability Zones that the VPC will be created in, e.g. `[ "a", "b", "c"]` to install in three availability zones.  By default, uses `["a", "b", "c"]`.  Note that the AWS selected region should have at least 3 availability zones for high availability.  Setting to a single availability zone will disable high availability and not provision EFS, in this case, reduce the number of master and proxy nodes to 1. |
@@ -145,21 +139,21 @@ This project installs the OpenShift 4 in several stages where each stage automat
 | `infrastructure_id` | yes | This id will be prefixed to all the AWS infrastructure resources provisioned with the script - typically using the clustername as its prefix.  |
 | `clustername`     | yes          | The name of the OpenShift cluster you will install     |
 | `domain` | yes | The domain that has been created in Route53 public hosted zone |
-| `ami` | yes | Red Hat CoreOS ami for your region (see https://docs.openshift.com/container-platform/4.2/installing/installing_aws_user_infra/installing-aws-user-infra.html). |
+| `ami` | no | Red Hat CoreOS ami for your region (see https://docs.openshift.com/container-platform/4.2/installing/installing_aws_user_infra/installing-aws-user-infra.html). |
 | `aws_secret_access_key` | yes | adding aws_secret_access_key to the cluster |
 | `aws_access_key_id` | yes | adding aws_access_key_id to the cluster |
 | `bootstrap` | no | |
 | `control_plane` | no | |
 | `use_worker_machinesets` | no | if set to true, then workers are created using machinesets otherwise use the worker variable |
 | `worker` | no | if not using the machinesets, this variable is used to size the worker machines |
-| `openshift_pull_secret` | yes | downloaded pull secret from https://cloud.redhat.com/openshift/install |
-| `openshift_installer_url` | no | the download site for Red Hat OpenShift installation and client codes |
-| `vpc_cidr`     | yes          | VPC private netwrok CIDR range default 10.10.0.0/16  |
-| `vpc_private_subnet_cidrs`     | yes          | CIDR range for the VPC private subnets default ["10.10.10.0/24", "10.10.11.0/24", "10.10.12.0/24" ]   |
-| `vpc_public_subnet_cidrs` | yes | default to ["10.10.20.0/24","10.10.21.0/24","10.10.22.0/24"] |
-| `cluster_network_cidr` | yes | default to "192.168.0.0/17" |
-| `cluster_network_host_prefix` | yes | default to "23" |
-| `service_network_cidr` | yes | default to "192.168.128.0/24" |
+| `openshift_pull_secret` | no | The value refers to a file name that contain downloaded pull secret from https://cloud.redhat.com/openshift/install; the default name is `openshift_pull_secret.json` |
+| `openshift_installer_url` | no | The URL to the download site for Red Hat OpenShift installation and client codes.  |
+| `private_vpc_cidr`     | no          | VPC private netwrok CIDR range default 10.10.0.0/16  |
+| `vpc_private_subnet_cidrs`     | no          | CIDR range for the VPC private subnets default ["10.10.10.0/24", "10.10.11.0/24", "10.10.12.0/24" ]   |
+| `vpc_public_subnet_cidrs` | no | default to ["10.10.20.0/24","10.10.21.0/24","10.10.22.0/24"] |
+| `cluster_network_cidr` | no | The pod network CIDR, default to "192.168.0.0/17" |
+| `cluster_network_host_prefix` | no | The prefix for the pod network, default to "23" |
+| `service_network_cidr` | no | The service network CIDR, default to "192.168.128.0/24" |
 
 
 
