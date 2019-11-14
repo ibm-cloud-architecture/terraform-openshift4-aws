@@ -6,6 +6,7 @@ resource "null_resource" "openshift_installer" {
   provisioner "local-exec" {
     command = "tar zxvf ${path.module}/openshift-install-linux-4*.tar.gz -C ${path.module}"
   }
+
   provisioner "local-exec" {
     command = "rm -f ${path.module}/openshift-install-linux-4*.tar.gz ${path.module}/robots*.txt*"
   }
@@ -28,21 +29,13 @@ resource "null_resource" "openshift_client" {
   }
 }
 
-data "http" "iam_role_name" {
-  url = "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
-}
-
-data "http" "instance_profile" {
-  url = "http://169.254.169.254/latest/meta-data/iam/security-credentials/${data.http.iam_role_name.body}"
-}
-
 resource "null_resource" "aws_credentials" {
   provisioner "local-exec" {
     command = "mkdir -p ~/.aws"
   }
 
   provisioner "local-exec" {
-    command = "echo '${var.aws_access_key_id != "" ? data.template_file.aws_credentials.rendered : data.template_file.aws_credentials_default.rendered}' > ~/.aws/credentials"
+    command = "echo '${data.template_file.aws_credentials.rendered}' > ~/.aws/credentials"
   }
 }
 
@@ -54,15 +47,6 @@ aws_secret_access_key = ${var.aws_secret_access_key}
 EOF
 }
 
-
-data "template_file" "aws_credentials_default" {
-  template = <<-EOF
-[default]
-aws_access_key_id = ${jsondecode(data.http.instance_profile.body)["AccessKeyId"]}
-aws_secret_access_key = ${jsondecode(data.http.instance_profile.body)["SecretAccessKey"]}
-aws_session_token = ${jsondecode(data.http.instance_profile.body)["Token"]}
-EOF
-}
 
 data "template_file" "install_config_yaml" {
   template = <<-EOF
@@ -293,55 +277,6 @@ status: {}
 EOF
 }
 
-# make the ingress controller private only loadbalancer, use privatelink to expose it from another public vpc later
-#resource "local_file" "cluster_ingress_config" {
-#  depends_on = [
-#    "null_resource.generate_manifests"
-#  ]
-#  file_permission = "0644"
-#  filename = "${path.module}/${local.infrastructure_id}/openshift/99_default_ingress_controller.yml"
-#  content = <<EOF
-#apiVersion: operator.openshift.io/v1
-#kind: IngressController
-#metadata:
-#  name: default
-#  namespace: openshift-ingress-operator
-#spec:
-#  replicas: 2
-#  endpointPublishingStrategy:
-#    type: LoadBalancerService
-#    loadBalancer:
-#      scope: Internal
-#EOF
-#}
-
-# create a private network nlb for the default router
-#resource "local_file" "cluster_ingress_service" {
-#  depends_on = [
-#    "null_resource.generate_manifests"
-#  ]
-#  file_permission = "0644"
-#  filename = "${path.module}/${local.infrastructure_id}/openshift/99_default_ingress_service.yml"
-#  content = <<EOF
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: router-default
-#  namespace: openshift-ingress
-#  annotations:
-#    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-#    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
-#spec:
-#  externalTrafficPolicy: Local
-#  type: LoadBalancer
-#  ports:
-#  - port: 443
-#    protocol: TCP
-#  selector:
-#    ingresscontroller.operator.openshift.io/deployment-ingresscontroller: default
-#EOF
-#}
-
 # build the bootstrap ignition config
 resource "null_resource" "generate_ignition_config" {
   depends_on = [
@@ -350,8 +285,6 @@ resource "null_resource" "generate_ignition_config" {
     "local_file.worker_machineset",
     "local_file.cluster_infrastructure_config",
     "local_file.cluster_dns_config",
-#    "local_file.cluster_ingress_config",
-#    "local_file.cluster_ingress_service",
   ]
 
   triggers = {
@@ -359,7 +292,6 @@ resource "null_resource" "generate_ignition_config" {
     local_file_install_config = "${local_file.install_config.id}"
     local_file_infrastructure_config = "${local_file.cluster_infrastructure_config.id}"
     local_file_dns_config = "${local_file.cluster_dns_config.id}"
-#    local_file_ingress_config = "${local_file.cluster_ingress_config.id}"
     local_file_worker_machineset = "${join(",", local_file.worker_machineset.*.id)}"
   }
 
@@ -441,4 +373,16 @@ data "local_file" "cluster_infrastructure" {
   ]
 
   filename = "${path.module}/${local.infrastructure_id}/manifests/cluster-infrastructure-02-config.yml"
+}
+
+resource "null_resource" "get_auth_config" {
+  depends_on = [ "null_resource.generate_ignition_config" ]
+  provisioner "local-exec" {
+     when = "create"
+     command = "cp ${path.module}/${local.infrastructure_id}/auth/* ${path.root}/ "
+  }
+  provisioner "local-exec" {
+     when = "destroy"
+     command = "rm ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
+  }
 }
