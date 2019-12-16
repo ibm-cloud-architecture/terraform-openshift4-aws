@@ -27,7 +27,7 @@ This project uses mainly Terraform as infrastructure management and installation
 
 ### Prerequisites
 
-1. To use Terraform automation, download the Terraform binaries [here](https://www.terraform.io/).
+1. To use Terraform automation, download the Terraform binaries [here](https://www.terraform.io/). The code here supports Terraform 0.12 - 0.12.13; there are warning messages to run this on 0.12.14 and later.
 
    On MacOS, you can acquire it using [homebrew](brew.sh) using this command:
 
