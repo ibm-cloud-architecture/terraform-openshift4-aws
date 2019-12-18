@@ -139,7 +139,7 @@ This project installs the OpenShift 4 in several stages where each stage automat
 | `infrastructure_id` | yes | This id will be prefixed to all the AWS infrastructure resources provisioned with the script - typically using the clustername as its prefix.  |
 | `clustername`     | yes          | The name of the OpenShift cluster you will install     |
 | `domain` | yes | The domain that has been created in Route53 public hosted zone |
-| `ami` | no | Red Hat CoreOS ami for your region (see https://docs.openshift.com/container-platform/4.2/installing/installing_aws_user_infra/installing-aws-user-infra.html). |
+| `ami` | no | Red Hat CoreOS ami for your region (see [here](https://docs.openshift.com/container-platform/4.2/installing/installing_aws_user_infra/installing-aws-user-infra.html#installation-aws-user-infra-rhcos-ami_installing-aws-user-infra)). Other platforms images information can be found [here](https://github.com/openshift/installer/blob/master/data/data/rhcos.json) |
 | `aws_secret_access_key` | yes | adding aws_secret_access_key to the cluster |
 | `aws_access_key_id` | yes | adding aws_access_key_id to the cluster |
 | `bootstrap` | no | |
