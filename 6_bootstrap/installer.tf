@@ -1,31 +1,25 @@
 resource "null_resource" "openshift_installer" {
   provisioner "local-exec" {
-    command = "wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-install-linux-4*.tar.gz'"
-  }
-
-  provisioner "local-exec" {
-    command = "tar zxvf ${path.module}/openshift-install-linux-4*.tar.gz -C ${path.module}"
-  }
-
-  provisioner "local-exec" {
-    command = "rm -f ${path.module}/openshift-install-linux-4*.tar.gz ${path.module}/robots*.txt*"
-  }
-}
-
-resource "null_resource" "openshift_client" {
-  depends_on = [
-    "null_resource.openshift_installer"
-  ]
-
-  provisioner "local-exec" {
-    command = "wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-client-linux-4*.tar.gz'"
-  }
-  provisioner "local-exec" {
-    command = "tar zxvf ${path.module}/openshift-client-linux-4*.tar.gz -C ${path.module}"
-  }
-
-  provisioner "local-exec" {
-    command = "rm -f ${path.module}/openshift-client-linux-4*.tar.gz ${path.module}/robots*.txt*"
+    command = <<EOF
+case $(uname -s) in
+  Darwin)
+    wget -r -l1 -np -nd -q ${var.openshift_installer_url} -P ${path.module} -A 'openshift-install-mac-4*.tar.gz'
+    tar zxvf ${path.module}/openshift-install-mac-4*.tar.gz -C ${path.module}
+    wget -r -l1 -np -nd -q ${var.openshift_installer_url} -P ${path.module} -A 'openshift-client-mac-4*.tar.gz'
+    tar zxvf ${path.module}/openshift-client-mac-4*.tar.gz -C ${path.module}
+    rm -f ${path.module}/openshift-client-mac-4*.tar.gz ${path.module}/openshift-install-mac-4*.tar.gz ${path.module}/README.* ${path.module}/robots*.txt*
+    ;;
+  Linux)
+    wget -r -l1 -np -nd -q ${var.openshift_installer_url} -P ${path.module} -A 'openshift-install-linux-4*.tar.gz'
+    tar zxvf ${path.module}/openshift-install-linux-4*.tar.gz -C ${path.module}
+    wget -r -l1 -np -nd -q ${var.openshift_installer_url} -P ${path.module} -A 'openshift-client-linux-4*.tar.gz'
+    tar zxvf ${path.module}/openshift-client-linux-4*.tar.gz -C ${path.module}
+    rm -f ${path.module}/openshift-client-linux-4*.tar.gz ${path.module}/openshift-install-linux-4*.tar.gz ${path.module}/README.* ${path.module}/robots*.txt*
+    ;;
+  *)
+    exit 1;;
+esac
+EOF
   }
 }
 
@@ -75,6 +69,14 @@ platform:
     region: ${data.aws_region.current.name}
 pullSecret: '${file(var.openshift_pull_secret)}'
 sshKey: '${tls_private_key.installkey.public_key_openssh}'
+%{if var.airgapped["enabled"]}imageContentSources:
+- mirrors:
+  - ${var.airgapped["repository"]}
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - ${var.airgapped["repository"]}
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+%{endif}
 EOF
 }
 
@@ -282,6 +284,7 @@ resource "null_resource" "generate_ignition_config" {
   depends_on = [
     "null_resource.manifest_cleanup_control_plane_machineset",
     "null_resource.manifest_cleanup_worker_machineset",
+    "local_file.airgapped_registry_upgrades",
     "local_file.worker_machineset",
     "local_file.cluster_infrastructure_config",
     "local_file.cluster_dns_config",
@@ -296,23 +299,14 @@ resource "null_resource" "generate_ignition_config" {
   }
 
   provisioner "local-exec" {
-    command = "mkdir -p ${path.module}/${local.infrastructure_id}"
-  }
+    command = <<EOF
+mkdir -p ${path.module}/${local.infrastructure_id}
+rm -rf ${path.module}/${local.infrastructure_id}/_manifests ${path.module}/${local.infrastructure_id}/_openshift
+cp -r ${path.module}/${local.infrastructure_id}/manifests ${path.module}/${local.infrastructure_id}/_manifests
+cp -r ${path.module}/${local.infrastructure_id}/openshift ${path.module}/${local.infrastructure_id}/_openshift
+${path.module}/openshift-install --dir=${path.module}/${local.infrastructure_id} create ignition-configs
+EOF
 
-  provisioner "local-exec" {
-    command = "rm -rf ${path.module}/${local.infrastructure_id}/_manifests ${path.module}/${local.infrastructure_id}/_openshift"
-  }
-
-  provisioner "local-exec" {
-    command = "cp -r ${path.module}/${local.infrastructure_id}/manifests ${path.module}/${local.infrastructure_id}/_manifests"
-  }
-
-  provisioner "local-exec" {
-    command = "cp -r ${path.module}/${local.infrastructure_id}/openshift ${path.module}/${local.infrastructure_id}/_openshift"
-  }
-
-  provisioner "local-exec" {
-    command = "${path.module}/openshift-install --dir=${path.module}/${local.infrastructure_id} create ignition-configs"
   }
 }
 
@@ -385,4 +379,31 @@ resource "null_resource" "get_auth_config" {
      when = "destroy"
      command = "rm ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
   }
+}
+
+data "template_file" "airgapped_registry_upgrades" {
+  count    = var.airgapped["enabled"] ? 1 : 0
+  template = <<EOF
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: airgapped
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - ${var.airgapped["repository"]}
+    source: quay.io/openshift-release-dev/ocp-release
+  - mirrors:
+    - ${var.airgapped["repository"]}
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
+}
+
+resource "local_file" "airgapped_registry_upgrades" {
+  count    = var.airgapped["enabled"] ? 1 : 0
+  content  = element(data.template_file.airgapped_registry_upgrades.*.rendered, count.index)
+  filename = "${path.module}/${local.infrastructure_id}/manifests/airgapped_registry_upgrades.yaml"
+  depends_on = [
+    "null_resource.generate_manifests",
+  ]
 }
