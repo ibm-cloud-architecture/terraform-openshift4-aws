@@ -1,14 +1,25 @@
 resource "null_resource" "openshift_installer" {
   provisioner "local-exec" {
-    command = "wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-install-linux-4*.tar.gz'"
+    command = <<EOF
+case $(uanme -s) in
+  Linux)
+    wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-install-linux-4*.tar.gz'
+    ;;
+  Darwin)
+    wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-install-mac-4*.tar.gz'
+    ;;
+  *) exit 1
+    ;;
+esac
+EOF
   }
 
   provisioner "local-exec" {
-    command = "tar zxvf ${path.module}/openshift-install-linux-4*.tar.gz -C ${path.module}"
+    command = "tar zxvf ${path.module}/openshift-install-*-4*.tar.gz -C ${path.module}"
   }
 
   provisioner "local-exec" {
-    command = "rm -f ${path.module}/openshift-install-linux-4*.tar.gz ${path.module}/robots*.txt*"
+    command = "rm -f ${path.module}/openshift-install-*-4*.tar.gz ${path.module}/robots*.txt*"
   }
 }
 
@@ -18,14 +29,27 @@ resource "null_resource" "openshift_client" {
   ]
 
   provisioner "local-exec" {
-    command = "wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-client-linux-4*.tar.gz'"
-  }
-  provisioner "local-exec" {
-    command = "tar zxvf ${path.module}/openshift-client-linux-4*.tar.gz -C ${path.module}"
+    command = <<EOF
+case $(uanme -s) in
+  Linux)
+    wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-client-linux-4*.tar.gz'
+    ;;
+  Darwin)
+    wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-client-mac-4*.tar.gz'
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+EOF
   }
 
   provisioner "local-exec" {
-    command = "rm -f ${path.module}/openshift-client-linux-4*.tar.gz ${path.module}/robots*.txt*"
+    command = "tar zxvf ${path.module}/openshift-client-*-4*.tar.gz -C ${path.module}"
+  }
+
+  provisioner "local-exec" {
+    command = "rm -f ${path.module}/openshift-client-*-4*.tar.gz ${path.module}/robots*.txt*"
   }
 }
 
@@ -79,7 +103,7 @@ EOF
 }
 
 resource "local_file" "install_config" {
-  content = "${data.template_file.install_config_yaml.rendered}"
+  content  = "${data.template_file.install_config_yaml.rendered}"
   filename = "${path.module}/install-config.yaml"
 }
 
@@ -119,7 +143,7 @@ resource "null_resource" "manifest_cleanup_control_plane_machineset" {
 
   triggers = {
     install_config = "${data.template_file.install_config_yaml.rendered}"
-    local_file = "${local_file.install_config.id}"
+    local_file     = "${local_file.install_config.id}"
   }
 
   provisioner "local-exec" {
@@ -135,7 +159,7 @@ resource "null_resource" "manifest_cleanup_worker_machineset" {
 
   triggers = {
     install_config = "${data.template_file.install_config_yaml.rendered}"
-    local_file = "${local_file.install_config.id}"
+    local_file     = "${local_file.install_config.id}"
   }
 
   provisioner "local-exec" {
@@ -145,7 +169,7 @@ resource "null_resource" "manifest_cleanup_worker_machineset" {
 
 ## Moving the machineset to the manifests dir
 resource "local_file" "worker_machineset" {
-  count = "${var.use_worker_machinesets ? length(var.aws_azs) : 0}"
+  count           = "${var.use_worker_machinesets ? length(var.aws_azs) : 0}"
   file_permission = "0644"
   depends_on = [
     "null_resource.manifest_cleanup_worker_machineset"
@@ -229,7 +253,7 @@ resource "local_file" "cluster_infrastructure_config" {
     "null_resource.generate_manifests"
   ]
   file_permission = "0644"
-  filename = "${path.module}/${local.infrastructure_id}/manifests/cluster-infrastructure-02-config.yml"
+  filename        = "${path.module}/${local.infrastructure_id}/manifests/cluster-infrastructure-02-config.yml"
 
   content = <<EOF
 apiVersion: config.openshift.io/v1
@@ -259,7 +283,7 @@ resource "local_file" "cluster_dns_config" {
     "null_resource.generate_manifests"
   ]
   file_permission = "0644"
-  filename = "${path.module}/${local.infrastructure_id}/manifests/cluster-dns-02-config.yml"
+  filename        = "${path.module}/${local.infrastructure_id}/manifests/cluster-dns-02-config.yml"
 
   content = <<EOF
 apiVersion: config.openshift.io/v1
@@ -288,11 +312,11 @@ resource "null_resource" "generate_ignition_config" {
   ]
 
   triggers = {
-    install_config = "${data.template_file.install_config_yaml.rendered}"
-    local_file_install_config = "${local_file.install_config.id}"
+    install_config                   = "${data.template_file.install_config_yaml.rendered}"
+    local_file_install_config        = "${local_file.install_config.id}"
     local_file_infrastructure_config = "${local_file.cluster_infrastructure_config.id}"
-    local_file_dns_config = "${local_file.cluster_dns_config.id}"
-    local_file_worker_machineset = "${join(",", local_file.worker_machineset.*.id)}"
+    local_file_dns_config            = "${local_file.cluster_dns_config.id}"
+    local_file_worker_machineset     = "${join(",", local_file.worker_machineset.*.id)}"
   }
 
   provisioner "local-exec" {
@@ -323,22 +347,22 @@ resource "null_resource" "cleanup" {
   ]
 
   provisioner "local-exec" {
-    when = "destroy"
+    when    = "destroy"
     command = "rm -rf ${path.module}/${local.infrastructure_id}"
   }
 
   provisioner "local-exec" {
-    when = "destroy"
+    when    = "destroy"
     command = "rm -f ${path.module}/openshift-install"
   }
 
   provisioner "local-exec" {
-    when = "destroy"
+    when    = "destroy"
     command = "rm -f ${path.module}/oc"
   }
 
   provisioner "local-exec" {
-    when = "destroy"
+    when    = "destroy"
     command = "rm -f ${path.module}/kubectl"
   }
 }
@@ -376,13 +400,14 @@ data "local_file" "cluster_infrastructure" {
 }
 
 resource "null_resource" "get_auth_config" {
-  depends_on = [ "null_resource.generate_ignition_config" ]
+  depends_on = ["null_resource.generate_ignition_config"]
   provisioner "local-exec" {
-     when = "create"
-     command = "cp ${path.module}/${local.infrastructure_id}/auth/* ${path.root}/ "
+    when    = "create"
+    command = "cp ${path.module}/${local.infrastructure_id}/auth/* ${path.root}/ "
   }
   provisioner "local-exec" {
-     when = "destroy"
-     command = "rm ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
+    when    = "destroy"
+    command = "rm ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
   }
 }
+
