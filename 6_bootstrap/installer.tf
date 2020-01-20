@@ -1,7 +1,7 @@
 resource "null_resource" "openshift_installer" {
   provisioner "local-exec" {
     command = <<EOF
-case $(uanme -s) in
+case $(uname -s) in
   Linux)
     wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-install-linux-4*.tar.gz'
     ;;
@@ -30,7 +30,7 @@ resource "null_resource" "openshift_client" {
 
   provisioner "local-exec" {
     command = <<EOF
-case $(uanme -s) in
+case $(uname -s) in
   Linux)
     wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-client-linux-4*.tar.gz'
     ;;
