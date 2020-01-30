@@ -25,7 +25,7 @@ EOF
 
 resource "null_resource" "openshift_client" {
   depends_on = [
-    "null_resource.openshift_installer"
+    null_resource.openshift_installer
   ]
 
   provisioner "local-exec" {
@@ -103,19 +103,19 @@ EOF
 }
 
 resource "local_file" "install_config" {
-  content  = "${data.template_file.install_config_yaml.rendered}"
-  filename = "${path.module}/install-config.yaml"
+  content  =  data.template_file.install_config_yaml.rendered
+  filename =  "${path.module}/install-config.yaml"
 }
 
 resource "null_resource" "generate_manifests" {
   triggers = {
-    install_config = "${data.template_file.install_config_yaml.rendered}"
+    install_config =  data.template_file.install_config_yaml.rendered
   }
 
   depends_on = [
-    "local_file.install_config",
-    "null_resource.aws_credentials",
-    "null_resource.openshift_installer"
+    local_file.install_config,
+    null_resource.aws_credentials,
+    null_resource.openshift_installer
   ]
 
   provisioner "local-exec" {
@@ -138,12 +138,12 @@ resource "null_resource" "generate_manifests" {
 # because we're providing our own control plane machines, remove it from the installer
 resource "null_resource" "manifest_cleanup_control_plane_machineset" {
   depends_on = [
-    "null_resource.generate_manifests"
+    null_resource.generate_manifests
   ]
 
   triggers = {
-    install_config = "${data.template_file.install_config_yaml.rendered}"
-    local_file     = "${local_file.install_config.id}"
+    install_config =  data.template_file.install_config_yaml.rendered
+    local_file     =  local_file.install_config.id
   }
 
   provisioner "local-exec" {
@@ -154,12 +154,12 @@ resource "null_resource" "manifest_cleanup_control_plane_machineset" {
 # remove these machinesets, we will rewrite them using the security group and subnets that we created
 resource "null_resource" "manifest_cleanup_worker_machineset" {
   depends_on = [
-    "null_resource.generate_manifests"
+    null_resource.generate_manifests
   ]
 
   triggers = {
-    install_config = "${data.template_file.install_config_yaml.rendered}"
-    local_file     = "${local_file.install_config.id}"
+    install_config =  data.template_file.install_config_yaml.rendered
+    local_file     =  local_file.install_config.id
   }
 
   provisioner "local-exec" {
@@ -169,13 +169,13 @@ resource "null_resource" "manifest_cleanup_worker_machineset" {
 
 ## Moving the machineset to the manifests dir
 resource "local_file" "worker_machineset" {
-  count           = "${var.use_worker_machinesets ? length(var.aws_azs) : 0}"
+  count           = var.use_worker_machinesets ? length(var.aws_azs) : 0
   file_permission = "0644"
   depends_on = [
-    "null_resource.manifest_cleanup_worker_machineset"
+    null_resource.manifest_cleanup_worker_machineset
   ]
 
-  filename = "${path.module}/${local.infrastructure_id}/openshift/99_openshift-cluster-api_worker-machineset-${count.index}.yaml"
+  filename =  "${path.module}/${local.infrastructure_id}/openshift/99_openshift-cluster-api_worker-machineset-${count.index}.yaml"
 
   content = <<-EOF
 apiVersion: machine.openshift.io/v1beta1
@@ -250,10 +250,10 @@ EOF
 # rewrite the domains and the infrastructure id we use in the cluster
 resource "local_file" "cluster_infrastructure_config" {
   depends_on = [
-    "null_resource.generate_manifests"
+    null_resource.generate_manifests
   ]
   file_permission = "0644"
-  filename        = "${path.module}/${local.infrastructure_id}/manifests/cluster-infrastructure-02-config.yml"
+  filename        =  "${path.module}/${local.infrastructure_id}/manifests/cluster-infrastructure-02-config.yml"
 
   content = <<EOF
 apiVersion: config.openshift.io/v1
@@ -280,10 +280,10 @@ EOF
 # remove public DNS domain management, just manage the private hosted zone
 resource "local_file" "cluster_dns_config" {
   depends_on = [
-    "null_resource.generate_manifests"
+    null_resource.generate_manifests
   ]
   file_permission = "0644"
-  filename        = "${path.module}/${local.infrastructure_id}/manifests/cluster-dns-02-config.yml"
+  filename        =  "${path.module}/${local.infrastructure_id}/manifests/cluster-dns-02-config.yml"
 
   content = <<EOF
 apiVersion: config.openshift.io/v1
@@ -304,18 +304,18 @@ EOF
 # build the bootstrap ignition config
 resource "null_resource" "generate_ignition_config" {
   depends_on = [
-    "null_resource.manifest_cleanup_control_plane_machineset",
-    "null_resource.manifest_cleanup_worker_machineset",
-    "local_file.worker_machineset",
-    "local_file.cluster_infrastructure_config",
-    "local_file.cluster_dns_config",
+    null_resource.manifest_cleanup_control_plane_machineset,
+    null_resource.manifest_cleanup_worker_machineset,
+    local_file.worker_machineset,
+    local_file.cluster_infrastructure_config,
+    local_file.cluster_dns_config,
   ]
 
   triggers = {
-    install_config                   = "${data.template_file.install_config_yaml.rendered}"
-    local_file_install_config        = "${local_file.install_config.id}"
-    local_file_infrastructure_config = "${local_file.cluster_infrastructure_config.id}"
-    local_file_dns_config            = "${local_file.cluster_dns_config.id}"
+    install_config                   =  data.template_file.install_config_yaml.rendered
+    local_file_install_config        =  local_file.install_config.id
+    local_file_infrastructure_config =  local_file.cluster_infrastructure_config.id
+    local_file_dns_config            =  local_file.cluster_dns_config.id
     local_file_worker_machineset     = "${join(",", local_file.worker_machineset.*.id)}"
   }
 
@@ -342,72 +342,71 @@ resource "null_resource" "generate_ignition_config" {
 
 resource "null_resource" "cleanup" {
   depends_on = [
-    "aws_instance.bootstrap",
-    "aws_s3_bucket_object.bootstrap_ign"
+    aws_instance.bootstrap,
+    aws_s3_bucket_object.bootstrap_ign
   ]
 
   provisioner "local-exec" {
-    when    = "destroy"
+    when    = destroy
     command = "rm -rf ${path.module}/${local.infrastructure_id}"
   }
 
   provisioner "local-exec" {
-    when    = "destroy"
+    when    = destroy
     command = "rm -f ${path.module}/openshift-install"
   }
 
   provisioner "local-exec" {
-    when    = "destroy"
+    when    = destroy
     command = "rm -f ${path.module}/oc"
   }
 
   provisioner "local-exec" {
-    when    = "destroy"
+    when    = destroy
     command = "rm -f ${path.module}/kubectl"
   }
 }
 
 data "local_file" "bootstrap_ign" {
   depends_on = [
-    "null_resource.generate_ignition_config"
+    null_resource.generate_ignition_config
   ]
 
-  filename = "${path.module}/${local.infrastructure_id}/bootstrap.ign"
+  filename =  "${path.module}/${local.infrastructure_id}/bootstrap.ign"
 }
 
 data "local_file" "master_ign" {
   depends_on = [
-    "null_resource.generate_ignition_config"
+    null_resource.generate_ignition_config
   ]
 
-  filename = "${path.module}/${local.infrastructure_id}/master.ign"
+  filename =  "${path.module}/${local.infrastructure_id}/master.ign"
 }
 
 data "local_file" "worker_ign" {
   depends_on = [
-    "null_resource.generate_ignition_config"
+    null_resource.generate_ignition_config
   ]
 
-  filename = "${path.module}/${local.infrastructure_id}/worker.ign"
+  filename =  "${path.module}/${local.infrastructure_id}/worker.ign"
 }
 
 data "local_file" "cluster_infrastructure" {
   depends_on = [
-    "null_resource.generate_manifests"
+    null_resource.generate_manifests
   ]
 
-  filename = "${path.module}/${local.infrastructure_id}/manifests/cluster-infrastructure-02-config.yml"
+  filename =  "${path.module}/${local.infrastructure_id}/manifests/cluster-infrastructure-02-config.yml"
 }
 
 resource "null_resource" "get_auth_config" {
-  depends_on = ["null_resource.generate_ignition_config"]
+  depends_on = [null_resource.generate_ignition_config]
   provisioner "local-exec" {
-    when    = "create"
+    when    = create
     command = "cp ${path.module}/${local.infrastructure_id}/auth/* ${path.root}/ "
   }
   provisioner "local-exec" {
-    when    = "destroy"
+    when    = destroy
     command = "rm ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
   }
 }
-

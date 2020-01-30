@@ -67,7 +67,7 @@ This project uses mainly Terraform as infrastructure management and installation
 
 3. Prepare the DNS
 
-   OpenShift requires a valid DNS doamin, you can get one from AWS Route53 or using existing domain and registrar.
+   OpenShift requires a valid DNS domain, you can get one from AWS Route53 or using existing domain and registrar. The DNS must be registered as a Public Hosted Zone in Route53.
 
 
 4. Prepare AWS Account Access

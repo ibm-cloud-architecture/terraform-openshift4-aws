@@ -1,16 +1,16 @@
 
 
 resource "aws_security_group" "master" {
-  name = "${local.infrastructure_id}-master"
-  vpc_id = "${data.aws_vpc.ocp_vpc.id}"
+  name =  "${local.infrastructure_id}-master"
+  vpc_id =  data.aws_vpc.ocp_vpc.id
 
-  tags = "${merge(
+  tags =  merge(
     var.default_tags,
     map(
-      "Name", "${local.infrastructure_id}-master",
+      "Name",  "${local.infrastructure_id}-master",
       "kubernetes.io/cluster/${local.infrastructure_id}", "shared"
     )
-  )}"
+  )
 }
 
 resource "aws_security_group_rule" "master_icmp" {
@@ -20,23 +20,23 @@ resource "aws_security_group_rule" "master_icmp" {
   to_port     = 0
   protocol    = "icmp"
   cidr_blocks = [
-    "${data.aws_vpc.ocp_vpc.cidr_block}"
+     data.aws_vpc.ocp_vpc.cidr_block
   ]
-  
-  security_group_id = "${aws_security_group.master.id}"
+
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group_rule" "master_ssh" {
   type        = "ingress"
 
-  from_port   = 22 
-  to_port     = 22 
+  from_port   = 22
+  to_port     = 22
   protocol    = "tcp"
   cidr_blocks = [
-    "${data.aws_vpc.ocp_vpc.cidr_block}"
+     data.aws_vpc.ocp_vpc.cidr_block
   ]
-  
-  security_group_id = "${aws_security_group.master.id}"
+
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group_rule" "master_6443" {
@@ -46,10 +46,10 @@ resource "aws_security_group_rule" "master_6443" {
   to_port     = 6443
   protocol    = "tcp"
   cidr_blocks = [
-    "${data.aws_vpc.ocp_vpc.cidr_block}"
+     data.aws_vpc.ocp_vpc.cidr_block
   ]
-  
-  security_group_id = "${aws_security_group.master.id}"
+
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group_rule" "master_22623" {
@@ -59,10 +59,10 @@ resource "aws_security_group_rule" "master_22623" {
   to_port     = 22623
   protocol    = "tcp"
   cidr_blocks = [
-    "${data.aws_vpc.ocp_vpc.cidr_block}"
+     data.aws_vpc.ocp_vpc.cidr_block
   ]
-  
-  security_group_id = "${aws_security_group.master.id}"
+
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group_rule" "master_etcd" {
@@ -72,8 +72,8 @@ resource "aws_security_group_rule" "master_etcd" {
   to_port     = 2380
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.master.id}"
-  security_group_id = "${aws_security_group.master.id}"
+  source_security_group_id =  aws_security_group.master.id
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group_rule" "master_master_vxlan" {
@@ -83,8 +83,8 @@ resource "aws_security_group_rule" "master_master_vxlan" {
   to_port     = 4789
   protocol    = "udp"
 
-  source_security_group_id = "${aws_security_group.master.id}"
-  security_group_id = "${aws_security_group.master.id}"
+  source_security_group_id =  aws_security_group.master.id
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group_rule" "master_worker_vxlan" {
@@ -94,8 +94,8 @@ resource "aws_security_group_rule" "master_worker_vxlan" {
   to_port     = 4789
   protocol    = "udp"
 
-  source_security_group_id = "${aws_security_group.worker.id}"
-  security_group_id = "${aws_security_group.master.id}"
+  source_security_group_id =  aws_security_group.worker.id
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group_rule" "master_master_internal" {
@@ -105,8 +105,8 @@ resource "aws_security_group_rule" "master_master_internal" {
   to_port     = 9999
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.master.id}"
-  security_group_id = "${aws_security_group.master.id}"
+  source_security_group_id =  aws_security_group.master.id
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group_rule" "master_worker_internal" {
@@ -116,8 +116,8 @@ resource "aws_security_group_rule" "master_worker_internal" {
   to_port     = 9999
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.worker.id}"
-  security_group_id = "${aws_security_group.master.id}"
+  source_security_group_id =  aws_security_group.worker.id
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group_rule" "master_master_kube" {
@@ -127,8 +127,8 @@ resource "aws_security_group_rule" "master_master_kube" {
   to_port     = 10259
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.master.id}"
-  security_group_id = "${aws_security_group.master.id}"
+  source_security_group_id =  aws_security_group.master.id
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group_rule" "master_worker_kube" {
@@ -138,8 +138,8 @@ resource "aws_security_group_rule" "master_worker_kube" {
   to_port     = 10259
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.worker.id}"
-  security_group_id = "${aws_security_group.master.id}"
+  source_security_group_id =  aws_security_group.worker.id
+  security_group_id =  aws_security_group.master.id
 }
 
 # TODO i don't like this
@@ -150,8 +150,8 @@ resource "aws_security_group_rule" "master_master_nodeport" {
   to_port     = 32767
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.master.id}"
-  security_group_id = "${aws_security_group.master.id}"
+  source_security_group_id =  aws_security_group.master.id
+  security_group_id =  aws_security_group.master.id
 }
 
 # TODO i don't like this
@@ -162,8 +162,8 @@ resource "aws_security_group_rule" "master_worker_nodeport" {
   to_port     = 32767
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.worker.id}"
-  security_group_id = "${aws_security_group.master.id}"
+  source_security_group_id =  aws_security_group.worker.id
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group_rule" "master_egress" {
@@ -175,21 +175,21 @@ resource "aws_security_group_rule" "master_egress" {
   cidr_blocks = [
     "0.0.0.0/0"
   ]
-  
-  security_group_id = "${aws_security_group.master.id}"
+
+  security_group_id =  aws_security_group.master.id
 }
 
 resource "aws_security_group" "worker" {
-  name = "${local.infrastructure_id}-worker"
-  vpc_id = "${data.aws_vpc.ocp_vpc.id}"
+  name =  "${local.infrastructure_id}-worker"
+  vpc_id =  data.aws_vpc.ocp_vpc.id
 
-  tags = "${merge(
+  tags =  merge(
     var.default_tags,
     map(
-      "Name", "${local.infrastructure_id}-worker",
+      "Name",  "${local.infrastructure_id}-worker",
       "kubernetes.io/cluster/${local.infrastructure_id}", "shared"
     )
-  )}"
+  )
 }
 
 resource "aws_security_group_rule" "worker_icmp" {
@@ -199,10 +199,10 @@ resource "aws_security_group_rule" "worker_icmp" {
   to_port     = 0
   protocol    = "icmp"
   cidr_blocks = [
-    "${data.aws_vpc.ocp_vpc.cidr_block}"
+     data.aws_vpc.ocp_vpc.cidr_block
   ]
-  
-  security_group_id = "${aws_security_group.worker.id}"
+
+  security_group_id =  aws_security_group.worker.id
 }
 
 resource "aws_security_group_rule" "worker_443" {
@@ -212,10 +212,10 @@ resource "aws_security_group_rule" "worker_443" {
   to_port     = 443
   protocol    = "tcp"
   cidr_blocks = [
-    "${data.aws_vpc.ocp_vpc.cidr_block}"
+     data.aws_vpc.ocp_vpc.cidr_block
   ]
 
-  security_group_id = "${aws_security_group.worker.id}"
+  security_group_id =  aws_security_group.worker.id
 }
 
 resource "aws_security_group_rule" "worker_80" {
@@ -225,23 +225,23 @@ resource "aws_security_group_rule" "worker_80" {
   to_port     = 80
   protocol    = "tcp"
   cidr_blocks = [
-    "${data.aws_vpc.ocp_vpc.cidr_block}"
+     data.aws_vpc.ocp_vpc.cidr_block
   ]
 
-  security_group_id = "${aws_security_group.worker.id}"
+  security_group_id =  aws_security_group.worker.id
 }
 
 resource "aws_security_group_rule" "worker_ssh" {
   type        = "ingress"
 
-  from_port   = 22 
-  to_port     = 22 
+  from_port   = 22
+  to_port     = 22
   protocol    = "tcp"
   cidr_blocks = [
-    "${data.aws_vpc.ocp_vpc.cidr_block}"
+     data.aws_vpc.ocp_vpc.cidr_block
   ]
-  
-  security_group_id = "${aws_security_group.worker.id}"
+
+  security_group_id =  aws_security_group.worker.id
 }
 
 resource "aws_security_group_rule" "worker_master_vxlan" {
@@ -251,8 +251,8 @@ resource "aws_security_group_rule" "worker_master_vxlan" {
   to_port     = 4789
   protocol    = "udp"
 
-  source_security_group_id = "${aws_security_group.master.id}"
-  security_group_id = "${aws_security_group.worker.id}"
+  source_security_group_id =  aws_security_group.master.id
+  security_group_id =  aws_security_group.worker.id
 }
 
 resource "aws_security_group_rule" "worker_worker_vxlan" {
@@ -262,8 +262,8 @@ resource "aws_security_group_rule" "worker_worker_vxlan" {
   to_port     = 4789
   protocol    = "udp"
 
-  source_security_group_id = "${aws_security_group.worker.id}"
-  security_group_id = "${aws_security_group.worker.id}"
+  source_security_group_id =  aws_security_group.worker.id
+  security_group_id =  aws_security_group.worker.id
 }
 
 resource "aws_security_group_rule" "worker_master_internal" {
@@ -273,8 +273,8 @@ resource "aws_security_group_rule" "worker_master_internal" {
   to_port     = 9999
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.master.id}"
-  security_group_id = "${aws_security_group.worker.id}"
+  source_security_group_id =  aws_security_group.master.id
+  security_group_id =  aws_security_group.worker.id
 }
 
 resource "aws_security_group_rule" "worker_worker_internal" {
@@ -284,8 +284,8 @@ resource "aws_security_group_rule" "worker_worker_internal" {
   to_port     = 9999
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.worker.id}"
-  security_group_id = "${aws_security_group.worker.id}"
+  source_security_group_id =  aws_security_group.worker.id
+  security_group_id =  aws_security_group.worker.id
 }
 
 resource "aws_security_group_rule" "worker_worker_kube" {
@@ -295,8 +295,8 @@ resource "aws_security_group_rule" "worker_worker_kube" {
   to_port     = 10250
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.worker.id}"
-  security_group_id = "${aws_security_group.worker.id}"
+  source_security_group_id =  aws_security_group.worker.id
+  security_group_id =  aws_security_group.worker.id
 }
 
 resource "aws_security_group_rule" "worker_master_kube" {
@@ -306,8 +306,8 @@ resource "aws_security_group_rule" "worker_master_kube" {
   to_port     = 10250
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.master.id}"
-  security_group_id = "${aws_security_group.worker.id}"
+  source_security_group_id =  aws_security_group.master.id
+  security_group_id =  aws_security_group.worker.id
 }
 
 # TODO i don't like this
@@ -318,8 +318,8 @@ resource "aws_security_group_rule" "worker_worker_nodeport" {
   to_port     = 32767
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.worker.id}"
-  security_group_id = "${aws_security_group.worker.id}"
+  source_security_group_id =  aws_security_group.worker.id
+  security_group_id =  aws_security_group.worker.id
 }
 
 # TODO i don't like this
@@ -330,8 +330,8 @@ resource "aws_security_group_rule" "worker_master_nodeport" {
   to_port     = 32767
   protocol    = "tcp"
 
-  source_security_group_id = "${aws_security_group.master.id}"
-  security_group_id = "${aws_security_group.worker.id}"
+  source_security_group_id =  aws_security_group.master.id
+  security_group_id =  aws_security_group.worker.id
 }
 
 resource "aws_security_group_rule" "worker_egress" {
@@ -343,6 +343,6 @@ resource "aws_security_group_rule" "worker_egress" {
   cidr_blocks = [
     "0.0.0.0/0"
   ]
-  
-  security_group_id = "${aws_security_group.worker.id}"
+
+  security_group_id =  aws_security_group.worker.id
 }
