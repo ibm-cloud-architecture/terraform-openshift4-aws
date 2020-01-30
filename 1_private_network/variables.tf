@@ -5,7 +5,7 @@ variable "aws_region" {
 }
 
 variable "aws_azs" {
-  type  = "list"
+  type  = list(string)
   description = "The availability zone letter appendix you want to deploy to in the selected region "
   default = ["a", "b", "c"]
 }
@@ -25,12 +25,12 @@ variable "vpc_cidr" { default = "10.10.0.0/16" }
 # Subnet Details
 variable "vpc_private_subnet_cidrs" {
   description = "List of subnet CIDRs"
-  type        = "list"
+  type        = list(string)
   default     = ["10.10.10.0/24", "10.10.11.0/24", "10.10.12.0/24" ]
 }
 
 variable "vpc_public_subnet_cidrs" {
   description = "List of subnet CIDRs"
-  type        = "list"
+  type        = list(string)
   default     = ["10.10.20.0/24", "10.10.21.0/24", "10.10.22.0/24" ]
 }
