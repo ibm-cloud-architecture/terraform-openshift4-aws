@@ -125,8 +125,7 @@ This project installs the OpenShift 4 in several stages where each stage automat
   aws_secret_access_key = ""
   bootstrap = { type = "i3.xlarge" }
   control_plane = { count = "3" , type = "m4.xlarge", disk = "120" }
-  use_worker_machinesets = true
-  # worker = {        count = "3" , type = "m4.large" , disk = "120" }
+  worker        = { count = "3" , type = "m4.xlarge" , disk = "120" }
   openshift_pull_secret = "./openshift_pull_secret.json"
   openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
   ```
@@ -145,7 +144,7 @@ This project installs the OpenShift 4 in several stages where each stage automat
 | `bootstrap` | no | |
 | `control_plane` | no | |
 | `use_worker_machinesets` | no | if set to true, then workers are created using machinesets otherwise use the worker variable |
-| `worker` | no | if not using the machinesets, this variable is used to size the worker machines |
+| `worker` | no | this variable is used to size the worker machines |
 | `openshift_pull_secret` | no | The value refers to a file name that contain downloaded pull secret from https://cloud.redhat.com/openshift/install; the default name is `openshift_pull_secret.json` |
 | `openshift_installer_url` | no | The URL to the download site for Red Hat OpenShift installation and client codes.  |
 | `private_vpc_cidr`     | no          | VPC private netwrok CIDR range default 10.10.0.0/16  |
