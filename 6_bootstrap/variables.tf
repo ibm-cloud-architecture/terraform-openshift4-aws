@@ -5,7 +5,7 @@ variable "aws_region" {
 }
 
 variable "aws_azs" {
-  type  = "list"
+  type  = list(string)
   description = "The availability zone letter appendix you want to deploy to in the selected region "
   default = ["a", "b", "c"]
 }
@@ -37,7 +37,7 @@ variable "private_vpc_id" { default = "" }
 # Subnet Details
 variable "private_vpc_private_subnet_ids" {
   description = "List of subnet ids"
-  type        = "list"
+  type        = list(string)
   default     = []
 }
 
@@ -103,11 +103,11 @@ variable "ocp_control_plane_lb_int_arn" {
 }
 variable "ocp_control_plane_lb_int_22623_tg_arn" {
   default = ""
-} 
+}
 
 variable "ocp_control_plane_lb_int_6443_tg_arn" {
   default = ""
-} 
+}
 
 variable "ocp_route53_private_zone_id" {
   default = ""
