@@ -5,7 +5,7 @@ variable "aws_region" {
 }
 
 variable "aws_azs" {
-  type  = "list"
+  type  = list(string)
   description = "The availability zone letter appendix you want to deploy to in the selected region "
   default = ["a", "b", "c"]
 }

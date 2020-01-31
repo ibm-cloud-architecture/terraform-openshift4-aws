@@ -17,5 +17,5 @@ variable "private_vpc_id" {}
 # Subnet Details
 variable "private_vpc_private_subnet_ids" {
   description = "List of subnet ids"
-  type        = "list"
+  type        = list(string)
 }

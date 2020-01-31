@@ -1,5 +1,5 @@
 resource "aws_iam_role" "ocp_ec2_master_role" {
-  name = "${local.infrastructure_id}-master-role"
+  name =  "${local.infrastructure_id}-master-role"
 
   assume_role_policy = <<EOF
 {
@@ -21,8 +21,8 @@ EOF
 # machine api and volume provisioning requires ec2*, load balancer service requires elb*,
 # machine api requires iam passrole*, registry and bootstrap requires s3*
 resource "aws_iam_role_policy" "ocp_ec2_master_role_policy" {
-  name = "${local.infrastructure_id}-master-role-policy"
-  role = "${aws_iam_role.ocp_ec2_master_role.id}"
+  name =  "${local.infrastructure_id}-master-role-policy"
+  role =  aws_iam_role.ocp_ec2_master_role.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -45,12 +45,12 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "ocp_ec2_master_instance_profile" {
-  name = "${local.infrastructure_id}-master-profile"
-  role = "${aws_iam_role.ocp_ec2_master_role.name}"
+  name =  "${local.infrastructure_id}-master-profile"
+  role =  aws_iam_role.ocp_ec2_master_role.name
 }
 
 resource "aws_iam_role" "ocp_ec2_worker_role" {
-  name = "${local.infrastructure_id}-worker-role"
+  name =  "${local.infrastructure_id}-worker-role"
 
   assume_role_policy = <<EOF
 {
@@ -70,8 +70,8 @@ EOF
 }
 
 resource "aws_iam_role_policy" "ocp_ec2_worker_role_policy" {
-  name = "${local.infrastructure_id}-worker-role-policy"
-  role = "${aws_iam_role.ocp_ec2_worker_role.id}"
+  name =  "${local.infrastructure_id}-worker-role-policy"
+  role =  aws_iam_role.ocp_ec2_worker_role.id
   policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -82,7 +82,7 @@ resource "aws_iam_role_policy" "ocp_ec2_worker_role_policy" {
                 "ec2:Describe*"
             ],
             "Resource": "*"
-        } 
+        }
     ]
 }
 EOF
@@ -90,6 +90,6 @@ EOF
 
 
 resource "aws_iam_instance_profile" "ocp_ec2_worker_instance_profile" {
-  name = "${local.infrastructure_id}-worker-profile"
-  role = "${aws_iam_role.ocp_ec2_worker_role.name}"
+  name =  "${local.infrastructure_id}-worker-profile"
+  role =  aws_iam_role.ocp_ec2_worker_role.name
 }
