@@ -99,6 +99,14 @@ platform:
     region: ${data.aws_region.current.name}
 pullSecret: '${file(var.openshift_pull_secret)}'
 sshKey: '${tls_private_key.installkey.public_key_openssh}'
+%{if var.airgapped["enabled"]}imageContentSources:
+- mirrors:
+  - ${var.airgapped["repository"]}
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - ${var.airgapped["repository"]}
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+%{endif}
 EOF
 }
 
@@ -409,4 +417,31 @@ resource "null_resource" "get_auth_config" {
     when    = destroy
     command = "rm ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
   }
+}
+
+data "template_file" "airgapped_registry_upgrades" {
+  count    = var.airgapped["enabled"] ? 1 : 0
+  template = <<EOF
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: airgapped
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - ${var.airgapped["repository"]}
+    source: quay.io/openshift-release-dev/ocp-release
+  - mirrors:
+    - ${var.airgapped["repository"]}
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
+}
+
+resource "local_file" "airgapped_registry_upgrades" {
+  count    = var.airgapped["enabled"] ? 1 : 0
+  content  = element(data.template_file.airgapped_registry_upgrades.*.rendered, count.index)
+  filename = "${path.module}/${local.infrastructure_id}/manifests/airgapped_registry_upgrades.yaml"
+  depends_on = [
+    "null_resource.generate_manifests",
+  ]
 }
