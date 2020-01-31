@@ -19,7 +19,7 @@ EOF
   }
 
   provisioner "local-exec" {
-    command = "rm -f ${path.module}/openshift-install-*-4*.tar.gz ${path.module}/robots*.txt*"
+    command = "rm -f ${path.module}/openshift-install-*-4*.tar.gz ${path.module}/robots*.txt* ${path.module}/README.md"
   }
 }
 
@@ -49,7 +49,7 @@ EOF
   }
 
   provisioner "local-exec" {
-    command = "rm -f ${path.module}/openshift-client-*-4*.tar.gz ${path.module}/robots*.txt*"
+    command = "rm -f ${path.module}/openshift-client-*-4*.tar.gz ${path.module}/robots*.txt* ${path.module}/README.md"
   }
 }
 
@@ -119,19 +119,19 @@ resource "null_resource" "generate_manifests" {
   ]
 
   provisioner "local-exec" {
-    command = "rm -rf ${path.module}/${local.infrastructure_id}"
+    command = "rm -rf ${path.module}/temp"
   }
 
   provisioner "local-exec" {
-    command = "mkdir -p ${path.module}/${local.infrastructure_id}"
+    command = "mkdir -p ${path.module}/temp"
   }
 
   provisioner "local-exec" {
-    command = "mv ${path.module}/install-config.yaml ${path.module}/${local.infrastructure_id}"
+    command = "mv ${path.module}/install-config.yaml ${path.module}/temp"
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/openshift-install --dir=${path.module}/${local.infrastructure_id} create manifests"
+    command = "${path.module}/openshift-install --dir=${path.module}/temp create manifests"
   }
 }
 
@@ -147,7 +147,7 @@ resource "null_resource" "manifest_cleanup_control_plane_machineset" {
   }
 
   provisioner "local-exec" {
-    command = "rm -f ${path.module}/${local.infrastructure_id}/openshift/99_openshift-cluster-api_master-machines-*.yaml"
+    command = "rm -f ${path.module}/temp/openshift/99_openshift-cluster-api_master-machines-*.yaml"
   }
 }
 
@@ -163,7 +163,7 @@ resource "null_resource" "manifest_cleanup_worker_machineset" {
   }
 
   provisioner "local-exec" {
-    command = "rm -f ${path.module}/${local.infrastructure_id}/openshift/99_openshift-cluster-api_worker-machines*.yaml"
+    command = "rm -f ${path.module}/temp/openshift/99_openshift-cluster-api_worker-machines*.yaml"
   }
 }
 
@@ -175,7 +175,7 @@ resource "local_file" "worker_machineset" {
     null_resource.manifest_cleanup_worker_machineset
   ]
 
-  filename =  "${path.module}/${local.infrastructure_id}/openshift/99_openshift-cluster-api_worker-machineset-${count.index}.yaml"
+  filename =  "${path.module}/temp/openshift/99_openshift-cluster-api_worker-machineset-${count.index}.yaml"
 
   content = <<-EOF
 apiVersion: machine.openshift.io/v1beta1
@@ -253,7 +253,7 @@ resource "local_file" "cluster_infrastructure_config" {
     null_resource.generate_manifests
   ]
   file_permission = "0644"
-  filename        =  "${path.module}/${local.infrastructure_id}/manifests/cluster-infrastructure-02-config.yml"
+  filename        =  "${path.module}/temp/manifests/cluster-infrastructure-02-config.yml"
 
   content = <<EOF
 apiVersion: config.openshift.io/v1
@@ -283,7 +283,7 @@ resource "local_file" "cluster_dns_config" {
     null_resource.generate_manifests
   ]
   file_permission = "0644"
-  filename        =  "${path.module}/${local.infrastructure_id}/manifests/cluster-dns-02-config.yml"
+  filename        =  "${path.module}/temp/manifests/cluster-dns-02-config.yml"
 
   content = <<EOF
 apiVersion: config.openshift.io/v1
@@ -320,23 +320,23 @@ resource "null_resource" "generate_ignition_config" {
   }
 
   provisioner "local-exec" {
-    command = "mkdir -p ${path.module}/${local.infrastructure_id}"
+    command = "mkdir -p ${path.module}/temp"
   }
 
   provisioner "local-exec" {
-    command = "rm -rf ${path.module}/${local.infrastructure_id}/_manifests ${path.module}/${local.infrastructure_id}/_openshift"
+    command = "rm -rf ${path.module}/temp/_manifests ${path.module}/temp/_openshift"
   }
 
   provisioner "local-exec" {
-    command = "cp -r ${path.module}/${local.infrastructure_id}/manifests ${path.module}/${local.infrastructure_id}/_manifests"
+    command = "cp -r ${path.module}/temp/manifests ${path.module}/temp/_manifests"
   }
 
   provisioner "local-exec" {
-    command = "cp -r ${path.module}/${local.infrastructure_id}/openshift ${path.module}/${local.infrastructure_id}/_openshift"
+    command = "cp -r ${path.module}/temp/openshift ${path.module}/temp/_openshift"
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/openshift-install --dir=${path.module}/${local.infrastructure_id} create ignition-configs"
+    command = "${path.module}/openshift-install --dir=${path.module}/temp create ignition-configs"
   }
 }
 
@@ -348,7 +348,7 @@ resource "null_resource" "cleanup" {
 
   provisioner "local-exec" {
     when    = destroy
-    command = "rm -rf ${path.module}/${local.infrastructure_id}"
+    command = "rm -rf ${path.module}/temp"
   }
 
   provisioner "local-exec" {
@@ -372,7 +372,7 @@ data "local_file" "bootstrap_ign" {
     null_resource.generate_ignition_config
   ]
 
-  filename =  "${path.module}/${local.infrastructure_id}/bootstrap.ign"
+  filename =  "${path.module}/temp/bootstrap.ign"
 }
 
 data "local_file" "master_ign" {
@@ -380,7 +380,7 @@ data "local_file" "master_ign" {
     null_resource.generate_ignition_config
   ]
 
-  filename =  "${path.module}/${local.infrastructure_id}/master.ign"
+  filename =  "${path.module}/temp/master.ign"
 }
 
 data "local_file" "worker_ign" {
@@ -388,7 +388,7 @@ data "local_file" "worker_ign" {
     null_resource.generate_ignition_config
   ]
 
-  filename =  "${path.module}/${local.infrastructure_id}/worker.ign"
+  filename =  "${path.module}/temp/worker.ign"
 }
 
 data "local_file" "cluster_infrastructure" {
@@ -396,14 +396,14 @@ data "local_file" "cluster_infrastructure" {
     null_resource.generate_manifests
   ]
 
-  filename =  "${path.module}/${local.infrastructure_id}/manifests/cluster-infrastructure-02-config.yml"
+  filename =  "${path.module}/temp/manifests/cluster-infrastructure-02-config.yml"
 }
 
 resource "null_resource" "get_auth_config" {
   depends_on = [null_resource.generate_ignition_config]
   provisioner "local-exec" {
     when    = create
-    command = "cp ${path.module}/${local.infrastructure_id}/auth/* ${path.root}/ "
+    command = "cp ${path.module}/temp/auth/* ${path.root}/ "
   }
   provisioner "local-exec" {
     when    = destroy

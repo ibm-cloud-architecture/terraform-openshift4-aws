@@ -69,4 +69,6 @@ EOF
 
 aws route53 change-resource-record-sets --hosted-zone-id $rte53zone --change-batch file://createRS.json
 
+rm createRS.json
+
 exit 0
