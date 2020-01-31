@@ -218,7 +218,7 @@ spec:
           deviceIndex: 0
           iamInstanceProfile:
             id: ${data.aws_iam_instance_profile.ocp_ec2_worker_instance_profile.name}
-          instanceType: m4.large
+          instanceType: ${lookup(var.worker, "type", "m4.large")}
           kind: AWSMachineProviderConfig
           metadata:
             creationTimestamp: null
