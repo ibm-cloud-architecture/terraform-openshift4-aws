@@ -1,0 +1,43 @@
+data "aws_ami" "rhcos" {
+    most_recent = true
+    owners = ["531415883065"]
+}
+
+resource "aws_instance" "worker_machines" {
+  count           = 3
+
+  ami           =  data.aws_ami.rhcos.id
+  instance_type =  "m4.large"
+}
+
+resource "aws_elb" "ocp_compute_elb"  {
+ listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+}
+
+resource "aws_security_group" "compute_elb" {
+}
+
+#data "aws_route53_zone" "ocp_private" {
+#  name = "${var.clustername}.${var.domain}"
+#}
+
+#data "aws_route53_zone" "ocp_public" {
+#  name =  var.domain
+#}
+
+resource "aws_route53_record" "compute_apps" {
+  name      = "*.apps.${var.clustername}.${var.domain}"
+  type      = "A"
+  zone_id = "aaa"
+}
+
+resource "aws_route53_record" "compute_apps_public" {
+  name      =  "*.apps.${var.clustername}.${var.domain}"
+  type      =  "A"
+  zone_id = "aaa"
+}
