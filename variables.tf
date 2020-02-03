@@ -19,3 +19,4 @@ variable "worker" {        default = { count = "3", type = "m4.large",  disk = "
 variable "openshift_pull_secret" { default = "./openshift_pull_secret.json" }
 variable "use_worker_machinesets" { default = true }
 variable "openshift_installer_url" { default = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest" }
+variable "airgapped" { default = false }

@@ -34,3 +34,7 @@ variable "vpc_public_subnet_cidrs" {
   type        = list(string)
   default     = ["10.10.20.0/24", "10.10.21.0/24", "10.10.22.0/24" ]
 }
+
+variable "airgapped" {
+  default = false
+}

@@ -53,6 +53,18 @@ EOF
   }
 }
 
+resource "null_resource" "load_ecr" {
+  count = var.airgapped ? 1 : 0
+
+  depends_on = [
+    null_resource.openshift_client
+  ]
+
+  provisioner "local-exec" {
+    command = "${path.module}/replicate.sh ${var.openshift_pull_secret} ${local.infrastructure_id}"
+  }
+}
+
 resource "null_resource" "aws_credentials" {
   provisioner "local-exec" {
     command = "mkdir -p ~/.aws"
@@ -97,14 +109,14 @@ networking:
 platform:
   aws:
     region: ${data.aws_region.current.name}
-pullSecret: '${file(var.openshift_pull_secret)}'
+pullSecret: %{if var.airgapped}'${file("newPullSecret.json")}'%{else}'${file(var.openshift_pull_secret)}'%{endif}
 sshKey: '${tls_private_key.installkey.public_key_openssh}'
-%{if var.airgapped["enabled"]}imageContentSources:
+%{if var.airgapped}imageContentSources:
 - mirrors:
-  - ${var.airgapped["repository"]}
+  - ${var.repository}
   source: quay.io/openshift-release-dev/ocp-release
 - mirrors:
-  - ${var.airgapped["repository"]}
+  - ${var.repository}
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 %{endif}
 EOF
@@ -123,7 +135,8 @@ resource "null_resource" "generate_manifests" {
   depends_on = [
     local_file.install_config,
     null_resource.aws_credentials,
-    null_resource.openshift_installer
+    null_resource.openshift_installer,
+    null_resource.load_ecr
   ]
 
   provisioner "local-exec" {
@@ -420,7 +433,7 @@ resource "null_resource" "get_auth_config" {
 }
 
 data "template_file" "airgapped_registry_upgrades" {
-  count    = var.airgapped["enabled"] ? 1 : 0
+  count    = var.airgapped ? 1 : 0
   template = <<EOF
 apiVersion: operator.openshift.io/v1alpha1
 kind: ImageContentSourcePolicy
@@ -429,19 +442,19 @@ metadata:
 spec:
   repositoryDigestMirrors:
   - mirrors:
-    - ${var.airgapped["repository"]}
+    - ${var.repository}
     source: quay.io/openshift-release-dev/ocp-release
   - mirrors:
-    - ${var.airgapped["repository"]}
+    - ${var.repository}
     source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 }
 
 resource "local_file" "airgapped_registry_upgrades" {
-  count    = var.airgapped["enabled"] ? 1 : 0
+  count    = var.airgapped ? 1 : 0
   content  = element(data.template_file.airgapped_registry_upgrades.*.rendered, count.index)
-  filename = "${path.module}/${local.infrastructure_id}/manifests/airgapped_registry_upgrades.yaml"
+  filename = "${path.module}/temp/manifests/airgapped_registry_upgrades.yaml"
   depends_on = [
-    "null_resource.generate_manifests",
+    null_resource.generate_manifests,
   ]
 }
