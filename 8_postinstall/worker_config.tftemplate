@@ -37,6 +37,7 @@ resource "aws_route53_record" "compute_apps" {
 }
 
 resource "aws_route53_record" "compute_apps_public" {
+  count     = var.airgapped ? 0 : 1
   name      =  "*.apps.${var.clustername}.${var.domain}"
   type      =  "A"
   zone_id = "aaa"

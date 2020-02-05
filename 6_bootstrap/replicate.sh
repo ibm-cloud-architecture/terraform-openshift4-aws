@@ -9,7 +9,7 @@ pullSecretFile=$2
 # requirements
 # jq
 # aws CLI
-# AWS env variable
+# AWS env variable2`
 
 pullDir=$(dirname $pullSecretFile)
 email=$(cat $pullSecretFile | jq -r -M '."auths"."quay.io"'."email")
@@ -19,11 +19,12 @@ loginString=$(aws ecr get-login)
 password=$(echo $loginString |  awk -F"-p " '{print $2}' | awk -F" -e none" '{print $1}')
 repoHost=$(echo $loginString |  awk -F"https://" '{print $2}' )
 # regex repoHost "https://" repoURL
-authdata="{\"$repoHost\":{\"auth\":\"AWS:$password\",\"email\":\"$email\"}}"
+authpwd=$(echo -n "AWS:$password" | base64)
+authdata="{\"$repoHost\":{\"auth\":\"$authpwd\",\"email\":\"$email\"}}"
 newSecret=$(cat $pullSecretFile | jq -r -M --argjson c $authdata '."auths" + $c')
 echo -n "{\"auths\":$newSecret}" > $pullDir/newPullSecret.json
 
 OCP_RELEASE=$(oc version --client | cut -d- -f3)
 
-oc adm -a newPullSecret.json release mirror --from=quay.io/openshift-release-dev/ocp-release:${OCP_RELEASE} \
+echo oc adm -a newPullSecret.json release mirror --from=quay.io/openshift-release-dev/ocp-release:${OCP_RELEASE} \
        --to=${repoHost}/${repoName} --to-release-image=${repoHost}/${repoName}:${OCP_RELEASE}
