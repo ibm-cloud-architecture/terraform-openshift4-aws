@@ -129,10 +129,11 @@ resource "aws_vpc_endpoint" "private_ecr" {
 }
 
 
-#### The followin must be mod for airgapped
+#### The following must be mod for airgapped - temporary enable public resources for debugging
 
 resource "aws_subnet" "ocp_pub_subnet" {
-  count                   =  var.airgapped ? 0 : length(var.aws_azs)
+  count                   =  length(var.aws_azs)
+  # count                   =  var.airgapped ? 0 : length(var.aws_azs)
 
   vpc_id                  =  aws_vpc.ocp_vpc.id
   cidr_block              =  element(var.vpc_public_subnet_cidrs, count.index)
@@ -150,7 +151,8 @@ resource "aws_subnet" "ocp_pub_subnet" {
 }
 
 resource "aws_internet_gateway" "ocp_igw" {
-  count  = var.airgapped ? 0 : 1
+  count  = 1
+  # count  = var.airgapped ? 0 : 1
   vpc_id =  aws_vpc.ocp_vpc.id
 
   tags =  merge(
@@ -162,7 +164,8 @@ resource "aws_internet_gateway" "ocp_igw" {
 }
 
 resource "aws_route" "ocp_pub_net_route" {
-  count =  var.airgapped ? 0 : length(var.aws_azs)
+  count =  length(var.aws_azs)
+  # count =  var.airgapped ? 0 : length(var.aws_azs)
 
   route_table_id = element(aws_route_table.ocp_pub_net_route_table.*.id, count.index)
   destination_cidr_block = "0.0.0.0/0"
@@ -170,7 +173,8 @@ resource "aws_route" "ocp_pub_net_route" {
 }
 
 resource "aws_route_table" "ocp_pub_net_route_table" {
-  count          =  var.airgapped ? 0 : length(var.aws_azs)
+  count          =  length(var.aws_azs)
+  # count          =  var.airgapped ? 0 : length(var.aws_azs)
 
   vpc_id =  aws_vpc.ocp_vpc.id
 
@@ -184,7 +188,8 @@ resource "aws_route_table" "ocp_pub_net_route_table" {
 }
 
 resource "aws_route_table_association" "ocp_pub_net_route_table_assoc" {
-  count          =  var.airgapped ? 0 : length(var.aws_azs)
+  count          =  length(var.aws_azs)
+  # count          =  var.airgapped ? 0 : length(var.aws_azs)
 
   subnet_id      = element(aws_subnet.ocp_pub_subnet.*.id, count.index)
   route_table_id = element(aws_route_table.ocp_pub_net_route_table.*.id, count.index)
@@ -192,7 +197,7 @@ resource "aws_route_table_association" "ocp_pub_net_route_table_assoc" {
 
 # Create Elastic IP for NAT gateway in each AZ
 resource "aws_eip" "ocp_ngw_eip" {
-  count =  length(var.aws_azs)
+  count =  var.airgapped ? 0 : length(var.aws_azs)
   vpc   = "true"
 
   tags =  merge(
