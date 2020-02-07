@@ -21,5 +21,9 @@ variable "infrastructure_id" {
 variable "clustername" { default = "ocp4" }
 
 variable "domain" {
-    default = "example.com"
+  default = "example.com"
+}
+
+variable "airgapped" {
+  default = false
 }
