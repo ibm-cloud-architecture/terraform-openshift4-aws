@@ -16,9 +16,10 @@ cp $MY_PATH/worker_config.tftemplate $MY_PATH/worker_config.tf
 instList=$(aws ec2 describe-instances --filters "Name=instance.group-name,Values=${clusterid}-worker"  --query "Reservations[*].Instances[*].{Instance:InstanceId}" | grep Instance | cut -d\" -f4)
 i=0
 echo $instList
-for instName in $instList do
+for instName in $instList
+do
   terraform import "module.postinstall.aws_instance.workermachines[$i]" $instName
-  i=i+1
+  i=$((i+1))
 done
 
 lb_list=$(aws elb describe-load-balancers | jq '."LoadBalancerDescriptions" | .[]."LoadBalancerName"')
