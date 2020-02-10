@@ -6,9 +6,10 @@ echo "Checking Classic load balancers for Kubernetes created elb"
 clusterid=$1 # "ocp42ss-gse01"
 clustername=$2 #"ocp42ss"
 domain=$3 # "vbudi.cf"
+airgapped=$4
 
 if [ -z $domain ]; then
-  echo "Arguments are clusterID clusterName Domain"
+  echo "Arguments are clusterID clusterName Domain airgapped"
   exit 999
 fi
 
@@ -67,7 +68,9 @@ cat <<EOF >createRS.json
 }
 EOF
 
-aws route53 change-resource-record-sets --hosted-zone-id $rte53zone --change-batch file://createRS.json
+if [ $airgapped -ne "true" ]; then
+  aws route53 change-resource-record-sets --hosted-zone-id $rte53zone --change-batch file://createRS.json
+fi
 
 rm createRS.json
 
