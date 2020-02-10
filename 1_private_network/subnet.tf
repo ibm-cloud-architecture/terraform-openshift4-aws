@@ -100,10 +100,40 @@ resource "aws_vpc_endpoint" "private_ec2" {
 
 }
 
+## private ecr endpoint
+data "aws_vpc_endpoint_service" "ecr" {
+  service = "ecr.dkr"
+}
 
+resource "aws_vpc_endpoint" "private_ecr" {
+  count = var.airgapped ? 1 : 0
+
+  vpc_id       =  aws_vpc.ocp_vpc.id
+  service_name =  data.aws_vpc_endpoint_service.ecr.service_name
+  vpc_endpoint_type = "Interface"
+
+  private_dns_enabled = true
+
+  security_group_ids = [
+     aws_security_group.private_ecr_api.id
+  ]
+
+  subnet_ids =  aws_subnet.ocp_pri_subnet.*.id
+  tags =  merge(
+    var.default_tags,
+    map(
+      "Name",  "${local.infrastructure_id}-ecr-vpce"
+    )
+  )
+
+}
+
+
+#### The following must be mod for airgapped - temporary enable public resources for debugging
 
 resource "aws_subnet" "ocp_pub_subnet" {
   count                   =  length(var.aws_azs)
+  # count                   =  var.airgapped ? 0 : length(var.aws_azs)
 
   vpc_id                  =  aws_vpc.ocp_vpc.id
   cidr_block              =  element(var.vpc_public_subnet_cidrs, count.index)
@@ -121,6 +151,8 @@ resource "aws_subnet" "ocp_pub_subnet" {
 }
 
 resource "aws_internet_gateway" "ocp_igw" {
+  count  = 1
+  # count  = var.airgapped ? 0 : 1
   vpc_id =  aws_vpc.ocp_vpc.id
 
   tags =  merge(
@@ -133,14 +165,16 @@ resource "aws_internet_gateway" "ocp_igw" {
 
 resource "aws_route" "ocp_pub_net_route" {
   count =  length(var.aws_azs)
+  # count =  var.airgapped ? 0 : length(var.aws_azs)
 
   route_table_id = element(aws_route_table.ocp_pub_net_route_table.*.id, count.index)
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id =  aws_internet_gateway.ocp_igw.id
+  gateway_id =  aws_internet_gateway.ocp_igw.0.id
 }
 
 resource "aws_route_table" "ocp_pub_net_route_table" {
   count          =  length(var.aws_azs)
+  # count          =  var.airgapped ? 0 : length(var.aws_azs)
 
   vpc_id =  aws_vpc.ocp_vpc.id
 
@@ -155,6 +189,7 @@ resource "aws_route_table" "ocp_pub_net_route_table" {
 
 resource "aws_route_table_association" "ocp_pub_net_route_table_assoc" {
   count          =  length(var.aws_azs)
+  # count          =  var.airgapped ? 0 : length(var.aws_azs)
 
   subnet_id      = element(aws_subnet.ocp_pub_subnet.*.id, count.index)
   route_table_id = element(aws_route_table.ocp_pub_net_route_table.*.id, count.index)
@@ -162,7 +197,7 @@ resource "aws_route_table_association" "ocp_pub_net_route_table_assoc" {
 
 # Create Elastic IP for NAT gateway in each AZ
 resource "aws_eip" "ocp_ngw_eip" {
-  count =  length(var.aws_azs)
+  count =  var.airgapped ? 0 : length(var.aws_azs)
   vpc   = "true"
 
   tags =  merge(
@@ -175,7 +210,7 @@ resource "aws_eip" "ocp_ngw_eip" {
 
 # Create NAT gateways for the private networks in each AZ
 resource "aws_nat_gateway" "ocp_ngw" {
-  count                   =  length(var.aws_azs)
+  count                   =  var.airgapped ? 0 : length(var.aws_azs)
 
   depends_on = [
     aws_internet_gateway.ocp_igw
@@ -193,7 +228,7 @@ resource "aws_nat_gateway" "ocp_ngw" {
 }
 
 resource "aws_route" "ocp_pri_net_route_ngw" {
-  count =  length(var.aws_azs)
+  count =  var.airgapped ? 0 : length(var.aws_azs)
 
   route_table_id = element(aws_route_table.ocp_pri_net_route_table.*.id, count.index)
   destination_cidr_block = "0.0.0.0/0"

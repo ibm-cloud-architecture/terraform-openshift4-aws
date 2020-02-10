@@ -112,3 +112,11 @@ variable "ocp_control_plane_lb_int_6443_tg_arn" {
 variable "ocp_route53_private_zone_id" {
   default = ""
 }
+
+variable "airgapped" {
+    default = false
+}
+
+variable repository {
+    default = ""
+}

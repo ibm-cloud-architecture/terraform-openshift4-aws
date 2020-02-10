@@ -16,13 +16,15 @@ module "private_network" {
   vpc_cidr = var.private_vpc_cidr
   vpc_private_subnet_cidrs = var.vpc_private_subnet_cidrs
   vpc_public_subnet_cidrs = var.vpc_public_subnet_cidrs
+  airgapped = var.airgapped
 }
 # ---------------------------
 #      module.private_network.infrastructure_id
 #      module.private_network.clustername
 #      module.private_network.private_vpc_id
 #      module.private_network.private_vpc_private_subnet_ids
-#      module.private_network.private_vpc_public_subnet_ids
+#     XX module.private_network.private_vpc_public_subnet_ids
+#      module.private_network.private_ecr_repository_url
 # ---------------------------
 module "load_balancer" {
   source = "./2_load_balancer"
@@ -115,6 +117,8 @@ module "bootstrap" {
   ocp_control_plane_lb_int_22623_tg_arn =  module.load_balancer.ocp_control_plane_lb_int_22623_tg_arn
   ocp_control_plane_lb_int_6443_tg_arn =  module.load_balancer.ocp_control_plane_lb_int_6443_tg_arn
   ocp_route53_private_zone_id =  module.dns.ocp_route53_private_zone_id
+  airgapped = var.airgapped
+  repository = module.private_network.private_ecr_repository_url
 }
 # ---------------------------
 #      module.bootstrap.clustername
