@@ -1,0 +1,35 @@
+cluster_id = "ocp4-9n2nn"
+clustername = "ocp4"
+base_domain = "example.com"
+machine_cidr = "10.0.0.0/16"
+master_count = 3
+use_ipv4 = true
+use_ipv6 = false
+aws_access_key_id = "AAAA"
+aws_secret_access_key = "AbcDefGhiJkl"
+openshift_pull_secret = "./openshift_pull_secret.json"
+openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+
+
+aws_ami = "ami-06f85a7940faa3217"
+aws_extra_tags = {
+  "kubernetes.io/cluster/ocp4-9n2nn" = "owned",
+  "owner" = "admin"
+  }
+aws_bootstrap_instance_type = "m4.large"
+aws_master_instance_type = "m4.xlarge"
+aws_master_availability_zones = [
+  "us-east-1b",
+  "us-east-1c",
+  "us-east-1a"
+  ]
+aws_worker_availability_zones = [
+  "us-east-1b",
+  "us-east-1c",
+  "us-east-1a"
+  ]
+aws_master_root_volume_iops = 0
+aws_master_root_volume_size = 120
+aws_master_root_volume_type = "gp2"
+aws_region = "us-east-1"
+aws_publish_strategy = "External"

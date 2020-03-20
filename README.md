@@ -113,38 +113,53 @@ This project installs the OpenShift 4 in several stages where each stage automat
 
 	Create a `terraform.tfvars` file with following content:
 
-  ```
-  aws_region = "us-east-2"
-  aws_azs = ["a", "b", "c"]
-  default_tags = { "owner" = "ocp42" }
-  infrastructure_id = "ocp42-abcde"
-  clustername = "ocp42"
-  domain = "example.com"
-  ami = "ami-0bc59aaa7363b805d"
-  aws_access_key_id = ""
-  aws_secret_access_key = ""
-  bootstrap = { type = "i3.xlarge" }
-  control_plane = { count = "3" , type = "m4.xlarge", disk = "120" }
-  worker        = { count = "3" , type = "m4.xlarge" , disk = "120" }
-  openshift_pull_secret = "./openshift_pull_secret.json"
-  openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
-  ```
+```
+cluster_id = "ocp4-9n2nn"
+clustername = "ocp4"
+base_domain = "example.com"
+machine_cidr = "10.0.0.0/16"
+master_count = 3
+use_ipv4 = true
+use_ipv6 = false
+aws_access_key_id = "AAAA"
+aws_secret_access_key = "AbcDefGhiJkl"
+openshift_pull_secret = "./openshift_pull_secret.json"
+openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+aws_extra_tags = {
+  "kubernetes.io/cluster/ocp4-9n2nn" = "owned",
+  "owner" = "admin"
+  }
+aws_bootstrap_instance_type = "m4.large"
+aws_master_instance_type = "m4.xlarge"
+aws_master_availability_zones = [
+  "us-east-1b",
+  "us-east-1c",
+  "us-east-1a"
+  ]
+aws_worker_availability_zones = [
+  "us-east-1b",
+  "us-east-1c",
+  "us-east-1a"
+  ]
+aws_master_root_volume_iops = 0
+aws_master_root_volume_size = 120
+aws_master_root_volume_type = "gp2"
+aws_region = "us-east-1"
+aws_publish_strategy = "External"
+```
 
 |name | required                        | description and value        |
 |----------------|------------|--------------|
 | `aws_region`   | no           | AWS region that the VPC will be created in.  By default, uses `us-east-2`.  Note that for an HA installation, the AWS selected region should have at least 3 availability zones. |
-| `aws_azs`          | no           | AWS Availability Zones that the VPC will be created in, e.g. `[ "a", "b", "c"]` to install in three availability zones.  By default, uses `["a", "b", "c"]`.  Note that the AWS selected region should have at least 3 availability zones for high availability.  Setting to a single availability zone will disable high availability and not provision EFS, in this case, reduce the number of master and proxy nodes to 1. |
-| `default_tags`     | no          | AWS tag to identify a resource for example owner:gchen     |
-| `infrastructure_id` | yes | This id will be prefixed to all the AWS infrastructure resources provisioned with the script - typically using the clustername as its prefix.  |
+| `aws_extra_tags`     | no          | AWS tag to identify a resource for example owner:gchen     |
+| `cluster_id` | yes | This id will be prefixed to all the AWS infrastructure resources provisioned with the script - typically using the clustername as its prefix.  |
 | `clustername`     | yes          | The name of the OpenShift cluster you will install     |
-| `domain` | yes | The domain that has been created in Route53 public hosted zone |
+| `base_domain` | yes | The domain that has been created in Route53 public hosted zone |
 | `ami` | no | Red Hat CoreOS ami for your region (see [here](https://docs.openshift.com/container-platform/4.2/installing/installing_aws_user_infra/installing-aws-user-infra.html#installation-aws-user-infra-rhcos-ami_installing-aws-user-infra)). Other platforms images information can be found [here](https://github.com/openshift/installer/blob/master/data/data/rhcos.json) |
 | `aws_secret_access_key` | yes | adding aws_secret_access_key to the cluster |
 | `aws_access_key_id` | yes | adding aws_access_key_id to the cluster |
-| `bootstrap` | no | |
-| `control_plane` | no | |
-| `use_worker_machinesets` | no | if set to true, then workers are created using machinesets otherwise use the worker variable |
-| `worker` | no | this variable is used to size the worker machines |
+| `aws_bootstrap_instance_type` | no | |
+| `aws_master_instance_type` | no | |
 | `openshift_pull_secret` | no | The value refers to a file name that contain downloaded pull secret from https://cloud.redhat.com/openshift/install; the default name is `openshift_pull_secret.json` |
 | `openshift_installer_url` | no | The URL to the download site for Red Hat OpenShift installation and client codes.  |
 | `private_vpc_cidr`     | no          | VPC private netwrok CIDR range default 10.10.0.0/16  |
