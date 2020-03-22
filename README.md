@@ -138,12 +138,11 @@ aws_publish_strategy = "External"
 | `aws_secret_access_key` | yes | adding aws_secret_access_key to the cluster |
 | `aws_access_key_id` | yes | adding aws_access_key_id to the cluster |
 | `aws_azs` | yes | list of availability zones to deploy VMs |
-| `aws_publish_strategy` | no | Whether to publish the API and apps endpoint externally - Default: "External" |
+| `aws_publish_strategy` | no | Whether to publish the API endpoint externally - Default: "External" |
 
 
 
 See [Terraform documentation](https://www.terraform.io/intro/getting-started/variables.html) for the format of this file.
-
 
 Initialize the Terraform:
 
