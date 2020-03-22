@@ -93,66 +93,58 @@ This project installs the OpenShift 4 in several stages where each stage automat
 
     - git cli
     - terraform 0.12 or later
-    - aws client
-    - jq command
     - wget command
 
-2. Deploy the private network and OpenShift 4 cluster through the connection using transit gateway to the public environment.
-   You can use all the automation in a single deployment or you can use the individual folder in the git repository sequentially. The folders are:
+2. Deploy the OpenShift 4 cluster using the following modules in the folders:
 
- 	- 1_private_network: Create the VPC and subnets for the OpenShift cluster
-	- 2_load_balancer: Create the system loadbalancer for the API and machine config operator
-	- 3_dns: generate a private hosted zone using route 53
-	- 4_security_group: defines network access rules for masters and workers
-	- 5_iam: define AWS authorities for the masters and workers
-	- 6_bootstrap: main module to provision the bootstrap node and generates OpenShift installation files and resources
-	- 7_control_plane: create master nodes manually (UPI)
-	- 8_postinstall: defines public DNS for application load balancer (optional)
+ 	- route53: generate a private hosted zone using route 53
+  - vpc: Create the VPC, subnets, security groups and load balancers for the OpenShift cluster
+	- install: Build the installation files, ignition configs and modify YAML files
+	- iam: define AWS authorities for the masters and workers
+	- bootstrap: main module to provision the bootstrap node and generates OpenShift installation files and resources
+	- master: create master nodes manually (UPI)
 
 	You can also provision all the components in a single terraform main module, to do that, you need to use a terraform.tfvars, that is copied from the terraform.tfvars.example file. The variables related to that are:
 
 	Create a `terraform.tfvars` file with following content:
 
-  ```
-  aws_region = "us-east-2"
-  aws_azs = ["a", "b", "c"]
-  default_tags = { "owner" = "ocp42" }
-  infrastructure_id = "ocp42-abcde"
-  clustername = "ocp42"
-  domain = "example.com"
-  ami = "ami-0bc59aaa7363b805d"
-  aws_access_key_id = ""
-  aws_secret_access_key = ""
-  bootstrap = { type = "i3.xlarge" }
-  control_plane = { count = "3" , type = "m4.xlarge", disk = "120" }
-  worker        = { count = "3" , type = "m4.xlarge" , disk = "120" }
-  openshift_pull_secret = "./openshift_pull_secret.json"
-  openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
-  ```
+```
+cluster_id = "ocp4-9n2nn"
+clustername = "ocp4"
+base_domain = "example.com"
+openshift_pull_secret = "./openshift_pull_secret.json"
+openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+
+aws_access_key_id = "AAAA"
+aws_secret_access_key = "AbcDefGhiJkl"
+aws_ami = "ami-06f85a7940faa3217"
+aws_extra_tags = {
+  "kubernetes.io/cluster/ocp4-9n2nn" = "owned",
+  "owner" = "admin"
+  }
+aws_azs = [
+  "us-east-1a",
+  "us-east-1b",
+  "us-east-1c"
+  ]
+aws_region = "us-east-1"
+aws_publish_strategy = "External"
+```
 
 |name | required                        | description and value        |
 |----------------|------------|--------------|
-| `aws_region`   | no           | AWS region that the VPC will be created in.  By default, uses `us-east-2`.  Note that for an HA installation, the AWS selected region should have at least 3 availability zones. |
-| `aws_azs`          | no           | AWS Availability Zones that the VPC will be created in, e.g. `[ "a", "b", "c"]` to install in three availability zones.  By default, uses `["a", "b", "c"]`.  Note that the AWS selected region should have at least 3 availability zones for high availability.  Setting to a single availability zone will disable high availability and not provision EFS, in this case, reduce the number of master and proxy nodes to 1. |
-| `default_tags`     | no          | AWS tag to identify a resource for example owner:gchen     |
-| `infrastructure_id` | yes | This id will be prefixed to all the AWS infrastructure resources provisioned with the script - typically using the clustername as its prefix.  |
+| `cluster_id` | yes | This id will be prefixed to all the AWS infrastructure resources provisioned with the script - typically using the clustername as its prefix.  |
 | `clustername`     | yes          | The name of the OpenShift cluster you will install     |
-| `domain` | yes | The domain that has been created in Route53 public hosted zone |
-| `ami` | no | Red Hat CoreOS ami for your region (see [here](https://docs.openshift.com/container-platform/4.2/installing/installing_aws_user_infra/installing-aws-user-infra.html#installation-aws-user-infra-rhcos-ami_installing-aws-user-infra)). Other platforms images information can be found [here](https://github.com/openshift/installer/blob/master/data/data/rhcos.json) |
-| `aws_secret_access_key` | yes | adding aws_secret_access_key to the cluster |
-| `aws_access_key_id` | yes | adding aws_access_key_id to the cluster |
-| `bootstrap` | no | |
-| `control_plane` | no | |
-| `use_worker_machinesets` | no | if set to true, then workers are created using machinesets otherwise use the worker variable |
-| `worker` | no | this variable is used to size the worker machines |
+| `base_domain` | yes | The domain that has been created in Route53 public hosted zone |
 | `openshift_pull_secret` | no | The value refers to a file name that contain downloaded pull secret from https://cloud.redhat.com/openshift/install; the default name is `openshift_pull_secret.json` |
 | `openshift_installer_url` | no | The URL to the download site for Red Hat OpenShift installation and client codes.  |
-| `private_vpc_cidr`     | no          | VPC private netwrok CIDR range default 10.10.0.0/16  |
-| `vpc_private_subnet_cidrs`     | no          | CIDR range for the VPC private subnets default ["10.10.10.0/24", "10.10.11.0/24", "10.10.12.0/24" ]   |
-| `vpc_public_subnet_cidrs` | no | default to ["10.10.20.0/24","10.10.21.0/24","10.10.22.0/24"] |
-| `cluster_network_cidr` | no | The pod network CIDR, default to "192.168.0.0/17" |
-| `cluster_network_host_prefix` | no | The prefix for the pod network, default to "23" |
-| `service_network_cidr` | no | The service network CIDR, default to "192.168.128.0/24" |
+| `aws_region`   | yes         | AWS region that the VPC will be created in.  By default, uses `us-east-2`.  Note that for an HA installation, the AWS selected region should have at least 3 availability zones. |
+| `aws_extra_tags`     | no          | AWS tag to identify a resource for example owner:myname     |
+| `aws_ami` | yes | Red Hat CoreOS ami for your region (see [here](https://docs.openshift.com/container-platform/4.2/installing/installing_aws_user_infra/installing-aws-user-infra.html#installation-aws-user-infra-rhcos-ami_installing-aws-user-infra)). Other platforms images information can be found [here](https://github.com/openshift/installer/blob/master/data/data/rhcos.json) |
+| `aws_secret_access_key` | yes | adding aws_secret_access_key to the cluster |
+| `aws_access_key_id` | yes | adding aws_access_key_id to the cluster |
+| `aws_azs` | yes | list of availability zones to deploy VMs |
+| `aws_publish_strategy` | no | Whether to publish the API and apps endpoint externally - Default: "External" |
 
 
 
@@ -171,3 +163,19 @@ Run the terraform provisioning:
 terraform plan
 terraform apply
 ```
+
+## Removal Procedure
+
+For the removal of the cluster, there are several considerations for removing AWS resources that are created by the cluster directly, but not using Terraform. These resources are unknown to terraform and must be deleted manually from AWS console.
+Some of these resources also hamper the ability to run `terraform destroy` as it becomes a dependent resource that prevent its parent resource to be deleted.
+
+The cluster created resources are:
+
+- Resources that prevents `terraform destroy` to be completed:
+  - Worker EC2 instances
+  - Application Load Balancer (classic load balancer) for the `*.apps.<cluster>.<domain>`
+  - Security Group for the application load balancer
+- Other resources that are not deleted:
+  - S3 resource for image-registry
+  - IAM users for the cluster
+  - Public Route53 Record set associated with the application load balancer
