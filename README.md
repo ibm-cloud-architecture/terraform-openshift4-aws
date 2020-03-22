@@ -117,57 +117,39 @@ This project installs the OpenShift 4 in several stages where each stage automat
 cluster_id = "ocp4-9n2nn"
 clustername = "ocp4"
 base_domain = "example.com"
-machine_cidr = "10.0.0.0/16"
-master_count = 3
-use_ipv4 = true
-use_ipv6 = false
-aws_access_key_id = "AAAA"
-aws_secret_access_key = "AbcDefGhiJkl"
 openshift_pull_secret = "./openshift_pull_secret.json"
 openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+
+aws_access_key_id = "AAAA"
+aws_secret_access_key = "AbcDefGhiJkl"
+aws_ami = "ami-06f85a7940faa3217"
 aws_extra_tags = {
   "kubernetes.io/cluster/ocp4-9n2nn" = "owned",
   "owner" = "admin"
   }
-aws_bootstrap_instance_type = "m4.large"
-aws_master_instance_type = "m4.xlarge"
-aws_master_availability_zones = [
+aws_azs = [
+  "us-east-1a",
   "us-east-1b",
-  "us-east-1c",
-  "us-east-1a"
+  "us-east-1c"
   ]
-aws_worker_availability_zones = [
-  "us-east-1b",
-  "us-east-1c",
-  "us-east-1a"
-  ]
-aws_master_root_volume_iops = 0
-aws_master_root_volume_size = 120
-aws_master_root_volume_type = "gp2"
 aws_region = "us-east-1"
 aws_publish_strategy = "External"
 ```
 
 |name | required                        | description and value        |
 |----------------|------------|--------------|
-| `aws_region`   | no           | AWS region that the VPC will be created in.  By default, uses `us-east-2`.  Note that for an HA installation, the AWS selected region should have at least 3 availability zones. |
-| `aws_extra_tags`     | no          | AWS tag to identify a resource for example owner:gchen     |
 | `cluster_id` | yes | This id will be prefixed to all the AWS infrastructure resources provisioned with the script - typically using the clustername as its prefix.  |
 | `clustername`     | yes          | The name of the OpenShift cluster you will install     |
 | `base_domain` | yes | The domain that has been created in Route53 public hosted zone |
-| `ami` | no | Red Hat CoreOS ami for your region (see [here](https://docs.openshift.com/container-platform/4.2/installing/installing_aws_user_infra/installing-aws-user-infra.html#installation-aws-user-infra-rhcos-ami_installing-aws-user-infra)). Other platforms images information can be found [here](https://github.com/openshift/installer/blob/master/data/data/rhcos.json) |
-| `aws_secret_access_key` | yes | adding aws_secret_access_key to the cluster |
-| `aws_access_key_id` | yes | adding aws_access_key_id to the cluster |
-| `aws_bootstrap_instance_type` | no | |
-| `aws_master_instance_type` | no | |
 | `openshift_pull_secret` | no | The value refers to a file name that contain downloaded pull secret from https://cloud.redhat.com/openshift/install; the default name is `openshift_pull_secret.json` |
 | `openshift_installer_url` | no | The URL to the download site for Red Hat OpenShift installation and client codes.  |
-| `private_vpc_cidr`     | no          | VPC private netwrok CIDR range default 10.10.0.0/16  |
-| `vpc_private_subnet_cidrs`     | no          | CIDR range for the VPC private subnets default ["10.10.10.0/24", "10.10.11.0/24", "10.10.12.0/24" ]   |
-| `vpc_public_subnet_cidrs` | no | default to ["10.10.20.0/24","10.10.21.0/24","10.10.22.0/24"] |
-| `cluster_network_cidr` | no | The pod network CIDR, default to "192.168.0.0/17" |
-| `cluster_network_host_prefix` | no | The prefix for the pod network, default to "23" |
-| `service_network_cidr` | no | The service network CIDR, default to "192.168.128.0/24" |
+| `aws_region`   | yes         | AWS region that the VPC will be created in.  By default, uses `us-east-2`.  Note that for an HA installation, the AWS selected region should have at least 3 availability zones. |
+| `aws_extra_tags`     | no          | AWS tag to identify a resource for example owner:myname     |
+| `aws_ami` | yes | Red Hat CoreOS ami for your region (see [here](https://docs.openshift.com/container-platform/4.2/installing/installing_aws_user_infra/installing-aws-user-infra.html#installation-aws-user-infra-rhcos-ami_installing-aws-user-infra)). Other platforms images information can be found [here](https://github.com/openshift/installer/blob/master/data/data/rhcos.json) |
+| `aws_secret_access_key` | yes | adding aws_secret_access_key to the cluster |
+| `aws_access_key_id` | yes | adding aws_access_key_id to the cluster |
+| `aws_azs` | yes | list of availability zones to deploy VMs |
+| `aws_publish_strategy` | no | Whether to publish the API and apps endpoint externally - Default: "External" |
 
 
 
