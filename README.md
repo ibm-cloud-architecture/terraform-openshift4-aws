@@ -93,21 +93,16 @@ This project installs the OpenShift 4 in several stages where each stage automat
 
     - git cli
     - terraform 0.12 or later
-    - aws client
-    - jq command
     - wget command
 
-2. Deploy the private network and OpenShift 4 cluster through the connection using transit gateway to the public environment.
-   You can use all the automation in a single deployment or you can use the individual folder in the git repository sequentially. The folders are:
+2. Deploy the OpenShift 4 cluster using the following modules in the folders:
 
- 	- 1_private_network: Create the VPC and subnets for the OpenShift cluster
-	- 2_load_balancer: Create the system loadbalancer for the API and machine config operator
-	- 3_dns: generate a private hosted zone using route 53
-	- 4_security_group: defines network access rules for masters and workers
-	- 5_iam: define AWS authorities for the masters and workers
-	- 6_bootstrap: main module to provision the bootstrap node and generates OpenShift installation files and resources
-	- 7_control_plane: create master nodes manually (UPI)
-	- 8_postinstall: defines public DNS for application load balancer (optional)
+ 	- route53: generate a private hosted zone using route 53
+  - vpc: Create the VPC, subnets, security groups and load balancers for the OpenShift cluster
+	- install: Build the installation files, ignition configs and modify YAML files
+	- iam: define AWS authorities for the masters and workers
+	- bootstrap: main module to provision the bootstrap node and generates OpenShift installation files and resources
+	- master: create master nodes manually (UPI)
 
 	You can also provision all the components in a single terraform main module, to do that, you need to use a terraform.tfvars, that is copied from the terraform.tfvars.example file. The variables related to that are:
 
