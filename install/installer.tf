@@ -205,7 +205,7 @@ resource "local_file" "dns_config" {
   ]
 
   file_permission = "0644"
-  filename        = "${path.module}/temp/manifest/cluster-dns-02-config.yml"
+  filename        = "${path.module}/temp/manifests/cluster-dns-02-config.yml"
   content         = <<EOF
 apiVersion: config.openshift.io/v1
 kind: DNS
