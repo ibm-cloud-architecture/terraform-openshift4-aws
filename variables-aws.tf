@@ -9,22 +9,30 @@ EOF
 
 variable "aws_bootstrap_instance_type" {
   type = string
-  description = "Instance type for the bootstrap node. Example: `m4.large`."
+  description = "Instance type for the bootstrap node. Default: `i3.xlarge`."
+  default = "i3.xlarge"
 }
 
 variable "aws_master_instance_type" {
   type = string
-  description = "Instance type for the master node(s). Example: `m4.large`."
+  description = "Instance type for the master node(s). Default: `m4.xlarge`."
+  default = "m4.xlarge"
 }
 
 variable "aws_worker_instance_type" {
   type = string
-  description = "Instance type for the worker node(s). Example: `m4.large`."
+  description = "Instance type for the worker node(s). Default: `m4.2xlarge`."
+  default = "m4.2xlarge"
 }
 
 variable "aws_ami" {
   type = string
-  description = "AMI for all nodes.  An encrypted copy of this AMI will be used.  Example: `ami-foobar123`."
+  description = <<EOF
+AMI for all nodes.  An encrypted copy of this AMI will be used.
+The list of RedHat CoreOS AMI for each of the AWS region can be found in:
+`https://github.com/openshift/installer/blob/master/data/data/rhcos-amd64.json`
+Get the History of the file to find an older AMI list
+EOF
 }
 
 variable "aws_extra_tags" {
@@ -33,7 +41,7 @@ variable "aws_extra_tags" {
   description = <<EOF
 (optional) Extra AWS tags to be applied to created resources.
 
-Example: `{ "key" = "value", "foo" = "bar" }`
+Example: `{ "owner" = "me", "kubernetes.io/cluster/mycluster" = "owned" }`
 EOF
 
   default = {}
@@ -42,11 +50,13 @@ EOF
 variable "aws_master_root_volume_type" {
   type        = string
   description = "The type of volume for the root block device of master nodes."
+  default = "gp2"
 }
 
 variable "aws_master_root_volume_size" {
   type        = string
   description = "The size of the volume in gigabytes for the root block device of master nodes."
+  default = 200
 }
 
 variable "aws_master_root_volume_iops" {
@@ -56,17 +66,20 @@ variable "aws_master_root_volume_iops" {
 The amount of provisioned IOPS for the root block device of master nodes.
 Ignored if the volume type is not io1.
 EOF
+  default = 0
 
 }
 
 variable "aws_worker_root_volume_type" {
   type        = string
   description = "The type of volume for the root block device of worker nodes."
+  default = "gp2"
 }
 
 variable "aws_worker_root_volume_size" {
   type        = string
   description = "The size of the volume in gigabytes for the root block device of worker nodes."
+  default = 200
 }
 
 variable "aws_worker_root_volume_iops" {
@@ -76,6 +89,7 @@ variable "aws_worker_root_volume_iops" {
 The amount of provisioned IOPS for the root block device of worker nodes.
 Ignored if the volume type is not io1.
 EOF
+  default = 0
 
 }
 
@@ -84,14 +98,9 @@ variable "aws_region" {
   description = "The target AWS region for the cluster."
 }
 
-variable "aws_master_availability_zones" {
+variable "aws_azs" {
   type = list(string)
-  description = "The availability zones in which to create the masters. The length of this list must match master_count."
-}
-
-variable "aws_worker_availability_zones" {
-  type = list(string)
-  description = "The availability zones to provision for workers.  Worker instances are created by the machine-API operator, but this variable controls their supporting infrastructure (subnets, routing, etc.)."
+  description = "The availability zones in which to create the nodes."
 }
 
 variable "aws_vpc" {
@@ -115,4 +124,5 @@ variable "aws_private_subnets" {
 variable "aws_publish_strategy" {
   type = string
   description = "The cluster publishing strategy, either Internal or External"
+  default = "External"
 }

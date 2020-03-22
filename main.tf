@@ -34,13 +34,13 @@ module "installer" {
   aws_access_key_id = var.aws_access_key_id
   aws_secret_access_key = var.aws_secret_access_key
   vpc_cidr_block = var.machine_cidr
-  master_count = var.master_count
+  master_count = length(var.aws_azs)
   openshift_pull_secret = var.openshift_pull_secret
   openshift_installer_url = var.openshift_installer_url
   aws_worker_root_volume_iops = var.aws_worker_root_volume_iops
   aws_worker_root_volume_size = var.aws_worker_root_volume_size
   aws_worker_root_volume_type = var.aws_worker_root_volume_type
-  aws_worker_availability_zones = var.aws_worker_availability_zones
+  aws_worker_availability_zones = var.aws_azs
   aws_worker_instance_type = var.aws_worker_instance_type
 }
 
@@ -75,7 +75,7 @@ module "dns" {
   base_domain              = var.base_domain
   cluster_domain           = "${var.clustername}.${var.base_domain}"
   cluster_id               = var.cluster_id
-  etcd_count               = var.master_count
+  etcd_count               = length(var.aws_azs)
   etcd_ip_addresses        = flatten(module.masters.ip_addresses)
   tags                     = local.tags
   vpc_id                   = module.vpc.vpc_id
@@ -124,9 +124,9 @@ module "masters" {
 
   tags = local.tags
 
-  availability_zones       = var.aws_master_availability_zones
+  availability_zones       = var.aws_azs
   az_to_subnet_id          = module.vpc.az_to_private_subnet_id
-  instance_count           = var.master_count
+  instance_count           = length(var.aws_azs)
   master_sg_ids            = [module.vpc.master_sg_id]
   root_volume_iops         = var.aws_master_root_volume_iops
   root_volume_size         = var.aws_master_root_volume_size

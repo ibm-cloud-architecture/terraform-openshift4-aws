@@ -7,19 +7,9 @@ variable "machine_cidr" {
 
   description = <<EOF
 The IP address space from which to assign machine IPs.
+Default "10.0.0.0/16"
 EOF
-
-}
-
-variable "master_count" {
-  type = string
-  default = "1"
-
-  description = <<EOF
-The number of master nodes to be created.
-This applies only to cloud platforms.
-EOF
-
+  default = "10.0.0.0/16"
 }
 
 variable "base_domain" {
@@ -63,18 +53,18 @@ EOF
 
 variable "use_ipv4" {
   type = bool
-
+  default = true
   description = <<EOF
-Should the cluster be created with ipv4 networking.
+Should the cluster be created with ipv4 networking. (default = true)
 EOF
 
 }
 
 variable "use_ipv6" {
   type = bool
-
+  default = false
   description = <<EOF
-Should the cluster be created with ipv6 networking.
+Should the cluster be created with ipv6 networking. (default = false)
 EOF
 
 }
