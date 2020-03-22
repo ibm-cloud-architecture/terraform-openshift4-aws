@@ -183,3 +183,4 @@ The cluster created resources are:
 - Other resources that are not deleted:
   - S3 resource for image-registry
   - IAM users for the cluster
+  - Public Route53 Record set associated with the application load balancer
