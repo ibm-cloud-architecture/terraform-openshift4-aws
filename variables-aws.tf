@@ -17,6 +17,11 @@ variable "aws_master_instance_type" {
   description = "Instance type for the master node(s). Example: `m4.large`."
 }
 
+variable "aws_worker_instance_type" {
+  type = string
+  description = "Instance type for the worker node(s). Example: `m4.large`."
+}
+
 variable "aws_ami" {
   type = string
   description = "AMI for all nodes.  An encrypted copy of this AMI will be used.  Example: `ami-foobar123`."
@@ -49,6 +54,26 @@ variable "aws_master_root_volume_iops" {
 
   description = <<EOF
 The amount of provisioned IOPS for the root block device of master nodes.
+Ignored if the volume type is not io1.
+EOF
+
+}
+
+variable "aws_worker_root_volume_type" {
+  type        = string
+  description = "The type of volume for the root block device of worker nodes."
+}
+
+variable "aws_worker_root_volume_size" {
+  type        = string
+  description = "The size of the volume in gigabytes for the root block device of worker nodes."
+}
+
+variable "aws_worker_root_volume_iops" {
+  type = string
+
+  description = <<EOF
+The amount of provisioned IOPS for the root block device of worker nodes.
 Ignored if the volume type is not io1.
 EOF
 
