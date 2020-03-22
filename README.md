@@ -35,18 +35,14 @@ This project uses mainly Terraform as infrastructure management and installation
    brew install terraform
    ```
 
-   We recommend to run Terraform automation from an AWS bastion host because the installation will place the entire OpenShift cluster in a private network where you might not have easy access to validate the cluster installation from your laptop.
-
-   Provision an EC2 bastion instance (with public and private subnets).
-   Install Terraform binary.
-   Install git
+2. Install git
 
    ```bash
    sudo yum intall git-all
    git --version
    ```
 
-   Install OpenShift command line `oc` cli:
+3. Install OpenShift command line `oc` cli:
 
    ```bash
    wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux-4.x.xx.tar.gz
@@ -57,20 +53,18 @@ This project uses mainly Terraform as infrastructure management and installation
    oc version
    ```
 
-   You'll also need the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/awscli-install-bundle.html) to do this.
-
-2. Get the Terraform code
+4. Get the Terraform code
 
    ```bash
    git clone https://github.com/ibm-cloud-architecture/terraform-openshift4-aws.git
    ```
 
-3. Prepare the DNS
+5. Prepare the DNS
 
    OpenShift requires a valid DNS domain, you can get one from AWS Route53 or using existing domain and registrar. The DNS must be registered as a Public Hosted Zone in Route53.
 
 
-4. Prepare AWS Account Access
+6. Prepare AWS Account Access
 
    Please reference the [Required AWS Infrastructure components](https://docs.openshift.com/container-platform/4.1/installing/installing_aws_user_infra/installing-aws-user-infra.html#installation-aws-user-infra-requirements_installing-aws-user-infra) to setup your AWS account before installing OpenShift 4.
 
