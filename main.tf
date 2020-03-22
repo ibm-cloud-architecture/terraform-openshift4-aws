@@ -29,7 +29,7 @@ module "installer" {
   ami = aws_ami_copy.main.id
   dns_public_id = module.dns.public_dns_id
   infrastructure_id = var.cluster_id
-  clustername = var.cluster_id
+  clustername = var.clustername
   domain = var.base_domain
   aws_access_key_id = var.aws_access_key_id
   aws_secret_access_key = var.aws_secret_access_key
