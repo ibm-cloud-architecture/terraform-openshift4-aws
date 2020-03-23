@@ -75,3 +75,43 @@ resource "aws_security_group_rule" "private_ecr_api_egress" {
 
   security_group_id =  aws_security_group.private_ecr_api.id
 }
+
+resource "aws_security_group" "private_elb_api" {
+  name =  "${var.cluster_id}-elb-api"
+  vpc_id =  aws_vpc.new_vpc[0].id
+
+  tags =  merge(
+    var.tags,
+    map(
+      "Name",  "${var.cluster_id}-private-elb-api",
+    )
+  )
+}
+
+# allow anybody in the VPC to talk to ecr through the private endpoint
+resource "aws_security_group_rule" "private_elb_ingress" {
+  type        = "ingress"
+
+  from_port   = 0
+  to_port     = 65535
+  protocol    = "tcp"
+  cidr_blocks = [
+     var.cidr_block
+  ]
+
+  security_group_id =  aws_security_group.private_ecr_api.id
+}
+
+resource "aws_security_group_rule" "private_elb_api_egress" {
+  type        = "egress"
+
+  from_port   = 0
+  to_port     = 0
+  protocol    = "all"
+  cidr_blocks = [
+    "0.0.0.0/0"
+  ]
+
+  security_group_id =  aws_security_group.private_elb_api.id
+}
+

@@ -208,6 +208,7 @@ resource "null_resource" "manifest_cleanup_dns_config" {
 
 #redo the dns config
 resource "local_file" "dns_config" {
+  count = var.airgapped.enabled ? 0 : 1
   depends_on = [
     null_resource.manifest_cleanup_dns_config
   ]
@@ -347,40 +348,64 @@ spec:
 EOF
 }
 
-resource "local_file" "awssecrets" {
+resource "local_file" "awssecrets1" {
   count           = var.airgapped.enabled ? 1 : 0
 
   depends_on = [
     null_resource.generate_manifests
   ]
   file_permission = "0644"
-  filename        =  "${path.module}/temp/openshift/99-awssecrets.yml"
+  filename        =  "${path.module}/temp/openshift/99_awssecrets_image_registry.yml"
 
   content = <<EOF
 apiVersion: v1
 data:
-  aws_access_key_id: ${var.aws_access_key_id}
-  aws_secret_access_key: ${var.aws_secret_access_key}
+  aws_access_key_id: ${base64encode(var.aws_access_key_id)}
+  aws_secret_access_key: ${base64encode(var.aws_secret_access_key)}
 kind: Secret
 metadata:
   name: installer-cloud-credentials
   namespace: openshift-image-registry
 type: Opaque
----
+EOF
+}
+
+resource "local_file" "awssecrets2" {
+  count           = var.airgapped.enabled ? 1 : 0
+
+  depends_on = [
+    null_resource.generate_manifests
+  ]
+  file_permission = "0644"
+  filename        =  "${path.module}/temp/openshift/99_awssecrets_ingress.yml"
+
+  content = <<EOF
 apiVersion: v1
 data:
-  aws_access_key_id: ${var.aws_access_key_id}
-  aws_secret_access_key: ${var.aws_secret_access_key}
+  aws_access_key_id: ${base64encode(var.aws_access_key_id)}
+  aws_secret_access_key: ${base64encode(var.aws_secret_access_key)}
 kind: Secret
 metadata:
   name: cloud-credentials
   namespace: openshift-ingress-operator
 type: Opaque
----
+EOF
+}
+
+resource "local_file" "awssecrets3" {
+  count           = var.airgapped.enabled ? 1 : 0
+
+  depends_on = [
+    null_resource.generate_manifests
+  ]
+  file_permission = "0644"
+  filename        =  "${path.module}/temp/openshift/99_awssecrets_machine_api.yml"
+
+  content = <<EOF
 apiVersion: v1
 data:
-  aws_access_key_id: ${var.aws_access_key_id}
-  aws_secret_access_key: ${var.aws_secret_access_key}
+  aws_access_key_id: ${base64encode(var.aws_access_key_id)}
+  aws_secret_access_key: ${base64encode(var.aws_secret_access_key)}
 kind: Secret
 metadata:
   name: aws-cloud-credentials
@@ -396,7 +421,9 @@ resource "null_resource" "generate_ignition_config" {
     local_file.worker_machineset,
     local_file.dns_config,
     local_file.ingresscontroller,
-    local_file.awssecrets,
+    local_file.awssecrets1,
+    local_file.awssecrets2,
+    local_file.awssecrets3,
     local_file.airgapped_registry_upgrades,
     local_file.cluster_infrastructure_config,
   ]
