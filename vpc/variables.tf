@@ -41,3 +41,11 @@ variable "private_subnets" {
   type        = list(string)
   description = "Existing private subnets into which the cluster should be installed."
 }
+
+variable "airgapped" {
+  type = map(string)
+  default = {
+    airgapped  = false
+    repository = ""
+  }
+}
