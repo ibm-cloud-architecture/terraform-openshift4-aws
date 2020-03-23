@@ -4,7 +4,7 @@ data "aws_vpc_endpoint_service" "ec2" {
 }
 
 resource "aws_vpc_endpoint" "private_ec2" {
-  count = var.airgapped.airgapped ? 1 : 0
+  count = var.airgapped.enabled ? 1 : 0
 
   vpc_id       =  aws_vpc.new_vpc[0].id
   service_name =  data.aws_vpc_endpoint_service.ec2.service_name
@@ -31,7 +31,7 @@ data "aws_vpc_endpoint_service" "ecr" {
 }
 
 resource "aws_vpc_endpoint" "private_ecr" {
-  count = var.airgapped.airgapped ? 1 : 0
+  count = var.airgapped.enabled ? 1 : 0
 
   vpc_id       =  aws_vpc.new_vpc[0].id
   service_name =  data.aws_vpc_endpoint_service.ecr.service_name
