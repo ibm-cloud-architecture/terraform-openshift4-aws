@@ -325,12 +325,78 @@ spec:
 EOF
 }
 
+#redo the worker machineset
+resource "local_file" "ingresscontroller" {
+  count           = var.airgapped.enabled ? 1 : 0
+
+  depends_on = [
+    null_resource.generate_manifests
+  ]
+  file_permission = "0644"
+  filename = "${path.module}/temp/openshift/99_default_ingress_controller.yml"
+  content = <<EOF
+apiVersion: operator.openshift.io/v1
+kind: IngressController
+metadata:
+  name: default
+  namespace: openshift-ingress-operator
+spec:
+  replicas: 2
+  endpointPublishingStrategy:
+    type: Private
+EOF
+}
+
+resource "local_file" "awssecrets" {
+  count           = var.airgapped.enabled ? 1 : 0
+
+  depends_on = [
+    null_resource.generate_manifests
+  ]
+  file_permission = "0644"
+  filename        =  "${path.module}/temp/openshift/99-awssecrets.yml"
+
+  content = <<EOF
+apiVersion: v1
+data:
+  aws_access_key_id: ${var.aws_access_key_id}
+  aws_secret_access_key: ${var.aws_secret_access_key}
+kind: Secret
+metadata:
+  name: installer-cloud-credentials
+  namespace: openshift-image-registry
+type: Opaque
+---
+apiVersion: v1
+data:
+  aws_access_key_id: ${var.aws_access_key_id}
+  aws_secret_access_key: ${var.aws_secret_access_key}
+kind: Secret
+metadata:
+  name: cloud-credentials
+  namespace: openshift-ingress-operator
+type: Opaque
+---
+apiVersion: v1
+data:
+  aws_access_key_id: ${var.aws_access_key_id}
+  aws_secret_access_key: ${var.aws_secret_access_key}
+kind: Secret
+metadata:
+  name: aws-cloud-credentials
+  namespace: openshift-machine-api
+type: Opaque
+EOF
+}
+
 # build the bootstrap ignition config
 resource "null_resource" "generate_ignition_config" {
   depends_on = [
     null_resource.manifest_cleanup_control_plane_machineset,
     local_file.worker_machineset,
     local_file.dns_config,
+    local_file.ingresscontroller,
+    local_file.awssecrets,
     local_file.airgapped_registry_upgrades,
     local_file.cluster_infrastructure_config,
   ]
