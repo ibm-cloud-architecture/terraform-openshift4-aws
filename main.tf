@@ -1,171 +1,134 @@
-resource "random_id" "clusterid" {
-  byte_length = "2"
-}
-
 locals {
-  infrastructure_id = var.infrastructure_id != "" ? var.infrastructure_id :  "${var.clustername}-${random_id.clusterid.hex}"
+  tags = merge(
+    {
+      "kubernetes.io/cluster/${var.cluster_id}" = "owned"
+    },
+    var.aws_extra_tags,
+  )
 }
 
-module "private_network" {
-  source = "./1_private_network"
-  aws_region = var.aws_region
-  aws_azs = var.aws_azs
-  default_tags = var.default_tags
-  infrastructure_id = local.infrastructure_id
-  clustername = var.clustername
-  vpc_cidr = var.private_vpc_cidr
-  vpc_private_subnet_cidrs = var.vpc_private_subnet_cidrs
-  vpc_public_subnet_cidrs = var.vpc_public_subnet_cidrs
-  airgapped = var.airgapped
+provider "aws" {
+  region = var.aws_region
+
+  # Validation of AWS Bahrain region was added in AWS TF provider v2.22
+  # so we skip when installing in me-south-1.
+  skip_region_validation = var.aws_region == "me-south-1"
 }
-# ---------------------------
-#      module.private_network.infrastructure_id
-#      module.private_network.clustername
-#      module.private_network.private_vpc_id
-#      module.private_network.private_vpc_private_subnet_ids
-#     XX module.private_network.private_vpc_public_subnet_ids
-#      module.private_network.private_ecr_repository_url
-# ---------------------------
-module "load_balancer" {
-  source = "./2_load_balancer"
-  aws_region =  var.aws_region
-  default_tags =  var.default_tags
-  infrastructure_id =  local.infrastructure_id
-  clustername =  var.clustername
-  private_vpc_id =  module.private_network.private_vpc_id
-  private_vpc_private_subnet_ids =  module.private_network.private_vpc_private_subnet_ids
-}
-# ---------------------------
-#      module.load_balancer.private_vpc_id
-#      module.load_balancer.infrastructure_id
-#      module.load_balancer.clustername
-#      module.load_balancer.ocp_control_plane_lb_int_arn
-#      module.load_balancer.ocp_control_plane_lb_int_6443_tg_arn
-#      module.load_balancer.ocp_control_plane_lb_int_22623_tg_arn
-# ---------------------------
-module "dns" {
-  source = "./3_dns"
-  aws_region =  var.aws_region
-  default_tags =  var.default_tags
-  infrastructure_id =  local.infrastructure_id
-  private_vpc_id =  module.private_network.private_vpc_id
-  ocp_control_plane_lb_int_arn =  module.load_balancer.ocp_control_plane_lb_int_arn
-  clustername =  var.clustername
-  domain =  var.domain
-}
-# ---------------------------
-#      module.dns.ocp_route53_private_zone_id
-#      module.dns.private_vpc_id
-#      module.dns.infrastructure_id
-#      module.dns.clustername
-#      module.dns.ocp_control_plane_lb_int_arn
-# ---------------------------
-module "security_group" {
-  source = "./4_security_group"
-  aws_region =  var.aws_region
-  default_tags =  var.default_tags
-  clustername =  var.clustername
-  infrastructure_id =  local.infrastructure_id
-  private_vpc_id =  module.private_network.private_vpc_id
-}
-# ---------------------------
-#      module.security_group.infrastructure_id
-#      module.security_group.clustername
-#      module.security_group.ocp_control_plane_security_group_id
-#      module.security_group.ocp_worker_security_group_id
-# ---------------------------
+
 module "iam" {
-  source = "./5_iam"
-  aws_region =  var.aws_region
-  default_tags =  var.default_tags
-  infrastructure_id =  local.infrastructure_id
-  clustername =  var.clustername
+  source = "./iam"
+
+  cluster_id = var.cluster_id
+
+  tags = local.tags
 }
-# ---------------------------
-#      module.iam.infrastructure_id
-#      module.iam.clustername
-#      module.iam.ocp_master_instance_profile_id
-#      module.iam.ocp_worker_instance_profile_id
-# ---------------------------
+
+module "installer" {
+  source = "./install"
+
+  ami = aws_ami_copy.main.id
+  dns_public_id = module.dns.public_dns_id
+  infrastructure_id = var.cluster_id
+  clustername = var.clustername
+  domain = var.base_domain
+  aws_access_key_id = var.aws_access_key_id
+  aws_secret_access_key = var.aws_secret_access_key
+  vpc_cidr_block = var.machine_cidr
+  master_count = length(var.aws_azs)
+  openshift_pull_secret = var.openshift_pull_secret
+  openshift_installer_url = var.openshift_installer_url
+  aws_worker_root_volume_iops = var.aws_worker_root_volume_iops
+  aws_worker_root_volume_size = var.aws_worker_root_volume_size
+  aws_worker_root_volume_type = var.aws_worker_root_volume_type
+  aws_worker_availability_zones = var.aws_azs
+  aws_worker_instance_type = var.aws_worker_instance_type
+}
+
+module "vpc" {
+  source = "./vpc"
+
+  cidr_block       = var.machine_cidr
+  cluster_id       = var.cluster_id
+  region           = var.aws_region
+  vpc              = var.aws_vpc
+  public_subnets   = var.aws_public_subnets
+  private_subnets  = var.aws_private_subnets
+  publish_strategy = var.aws_publish_strategy
+
+  availability_zones = var.aws_azs
+
+  tags = local.tags
+}
+
+module "dns" {
+  source = "./route53"
+
+  api_external_lb_dns_name = module.vpc.aws_lb_api_external_dns_name
+  api_external_lb_zone_id  = module.vpc.aws_lb_api_external_zone_id
+  api_internal_lb_dns_name = module.vpc.aws_lb_api_internal_dns_name
+  api_internal_lb_zone_id  = module.vpc.aws_lb_api_internal_zone_id
+  base_domain              = var.base_domain
+  cluster_domain           = "${var.clustername}.${var.base_domain}"
+  cluster_id               = var.cluster_id
+  etcd_count               = length(var.aws_azs)
+  etcd_ip_addresses        = flatten(module.masters.ip_addresses)
+  tags                     = local.tags
+  vpc_id                   = module.vpc.vpc_id
+  publish_strategy         = var.aws_publish_strategy
+}
+
+resource "aws_ami_copy" "main" {
+  name              = "${var.cluster_id}-master"
+  source_ami_id     = var.aws_ami
+  source_ami_region = var.aws_region
+  encrypted         = true
+
+  tags = merge(
+    {
+      "Name"         = "${var.cluster_id}-master"
+      "sourceAMI"    = var.aws_ami
+      "sourceRegion" = var.aws_region
+    },
+    local.tags,
+  )
+}
+
 module "bootstrap" {
-  source = "./6_bootstrap"
-  aws_region =  var.aws_region
-  aws_azs =  var.aws_azs
-  default_tags =  var.default_tags
-  ami =  var.ami
-  aws_access_key_id =  var.aws_access_key_id
-  aws_secret_access_key =  var.aws_secret_access_key
-  infrastructure_id =  local.infrastructure_id
-  clustername =  var.clustername
-  private_vpc_id =  module.private_network.private_vpc_id
-  private_vpc_private_subnet_ids =  module.private_network.private_vpc_private_subnet_ids
-  domain =  var.domain
-  cluster_network_cidr =  var.cluster_network_cidr
-  cluster_network_host_prefix =  var.cluster_network_host_prefix
-  service_network_cidr =  var.service_network_cidr
-  bootstrap =  var.bootstrap
-  control_plane =  var.control_plane
-  worker =  var.worker
-  openshift_pull_secret =  var.openshift_pull_secret
-  use_worker_machinesets =  var.use_worker_machinesets
-  openshift_installer_url =  var.openshift_installer_url
-  ocp_control_plane_security_group_id =  module.security_group.ocp_control_plane_security_group_id
-  ocp_worker_security_group_id =  module.security_group.ocp_worker_security_group_id
-  ocp_master_instance_profile_id =  module.iam.ocp_master_instance_profile_id
-  ocp_worker_instance_profile_id =  module.iam.ocp_worker_instance_profile_id
-  ocp_control_plane_lb_int_arn =  module.load_balancer.ocp_control_plane_lb_int_arn
-  ocp_control_plane_lb_int_22623_tg_arn =  module.load_balancer.ocp_control_plane_lb_int_22623_tg_arn
-  ocp_control_plane_lb_int_6443_tg_arn =  module.load_balancer.ocp_control_plane_lb_int_6443_tg_arn
-  ocp_route53_private_zone_id =  module.dns.ocp_route53_private_zone_id
-  airgapped = var.airgapped
-  repository = module.private_network.private_ecr_repository_url
+  source = "./bootstrap"
+
+  ami                      = aws_ami_copy.main.id
+  instance_type            = var.aws_bootstrap_instance_type
+  cluster_id               = var.cluster_id
+  ignition                 = module.installer.bootstrap_ign
+  subnet_id                = var.aws_publish_strategy == "External" ? module.vpc.az_to_public_subnet_id[var.aws_azs[0]] : module.vpc.az_to_private_subnet_id[var.aws_azs[0]]
+  target_group_arns        = module.vpc.aws_lb_target_group_arns
+  target_group_arns_length = module.vpc.aws_lb_target_group_arns_length
+  vpc_id                   = module.vpc.vpc_id
+  vpc_cidrs                = module.vpc.vpc_cidrs
+  vpc_security_group_ids   = [module.vpc.master_sg_id]
+  publish_strategy         = var.aws_publish_strategy
+
+  tags = local.tags
 }
-# ---------------------------
-#      module.bootstrap.clustername
-#      module.bootstrap.infrastructure_id
-#      module.bootstrap.master_ign_64
-#      module.bootstrap.worker_ign_64
-#      module.bootstrap.private_ssh_key
-#      module.bootstrap.public_ssh_key
-# ---------------------------
-module "control_plane" {
-  source = "./7_control_plane"
-  aws_region =  var.aws_region
-  aws_azs =  var.aws_azs
-  default_tags =  var.default_tags
-  ami =  var.ami
-  infrastructure_id =  local.infrastructure_id
-  clustername =  var.clustername
-  private_vpc_id =  module.private_network.private_vpc_id
-  private_vpc_private_subnet_ids =  module.private_network.private_vpc_private_subnet_ids
-  domain =  var.domain
-  control_plane =  var.control_plane
-  worker =  var.worker
-  openshift_pull_secret =  var.openshift_pull_secret
-  use_worker_machinesets =  var.use_worker_machinesets
-  ocp_control_plane_security_group_id =  module.security_group.ocp_control_plane_security_group_id
-  ocp_worker_security_group_id =  module.security_group.ocp_worker_security_group_id
-  ocp_master_instance_profile_id =  module.iam.ocp_master_instance_profile_id
-  ocp_worker_instance_profile_id =  module.iam.ocp_worker_instance_profile_id
-  ocp_control_plane_lb_int_arn =  module.load_balancer.ocp_control_plane_lb_int_arn
-  ocp_control_plane_lb_int_22623_tg_arn =  module.load_balancer.ocp_control_plane_lb_int_22623_tg_arn
-  ocp_control_plane_lb_int_6443_tg_arn =  module.load_balancer.ocp_control_plane_lb_int_6443_tg_arn
-  ocp_route53_private_zone_id =  module.dns.ocp_route53_private_zone_id
-  master_ign_64 =  module.bootstrap.master_ign_64
-  worker_ign_64 =  module.bootstrap.worker_ign_64
-}
-# ---------------------------
-#      module.control_plane.clustername
-#      module.control_plane.infrastructure_id
-# ---------------------------
-# module post install - waiting for aws load balancer
-#
-module "postinstall" {
-  source = "./8_postinstall"
-  aws_region =  var.aws_region
-  aws_azs =  var.aws_azs
-  default_tags =  var.default_tags
-  infrastructure_id =  module.control_plane.infrastructure_id
-  clustername =  module.control_plane.clustername
-  domain =  var.domain
+
+module "masters" {
+  source = "./master"
+
+  cluster_id    = var.cluster_id
+  instance_type = var.aws_master_instance_type
+
+  tags = local.tags
+
+  availability_zones       = var.aws_azs
+  az_to_subnet_id          = module.vpc.az_to_private_subnet_id
+  instance_count           = length(var.aws_azs)
+  master_sg_ids            = [module.vpc.master_sg_id]
+  root_volume_iops         = var.aws_master_root_volume_iops
+  root_volume_size         = var.aws_master_root_volume_size
+  root_volume_type         = var.aws_master_root_volume_type
+  target_group_arns        = module.vpc.aws_lb_target_group_arns
+  target_group_arns_length = module.vpc.aws_lb_target_group_arns_length
+  ec2_ami                  = aws_ami_copy.main.id
+  user_data_ign            = module.installer.master_ign
+  publish_strategy         = var.aws_publish_strategy
 }
