@@ -57,7 +57,7 @@ data "aws_vpc_endpoint_service" "elb" {
   service = "elasticloadbalancing"
 }
 
-resource "aws_vpc_endpoint" "private_ecr" {
+resource "aws_vpc_endpoint" "private_elb" {
   count = var.airgapped.enabled ? 1 : 0
 
   vpc_id       =  aws_vpc.new_vpc[0].id
