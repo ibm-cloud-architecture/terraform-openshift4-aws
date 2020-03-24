@@ -1,25 +1,13 @@
 # Automated OpenShift v4 installation on AWS
 
-This project automates the Red Hat Openshift Container Platform 4.2 installation on Amazon AWS platform. It focuses on the Openshift User-provided infrastructure installation (UPI) where end users provide pre-existing infrastructure including VMs, networking, load balancers, DNS configuration etc.
+This project automates the Red Hat OpenShift Container Platform 4.x installation on Amazon AWS platform. It focuses on the OpenShift User-provided infrastructure installation (UPI) where implementers provide pre-existing infrastructure including VMs, networking, load balancers, DNS configuration etc.
 
-* [Infrastructure Architecture](#infrastructure-architecture)
 * [Terraform Automation](#terraform-automation)
+* [Infrastructure Architecture](#infrastructure-architecture)
 * [Installation Procedure](#installation-procedure)
-* [Cluster access](#cluster-access)
-* [AWS Cloud Provider](#aws-cloud-provider)
-
-
-## Infrastructure Architecture
-
-For detail on OpenShift UPI, please reference the following:
-
-
-* [https://docs.openshift.com/container-platform/4.1/installing/installing_aws_user_infra/installing-aws-user-infra.html](https://docs.openshift.com/container-platform/4.1/installing/installing_aws_user_infra/installing-aws-user-infra.html)
-* [https://github.com/openshift/installer/blob/master/docs/user/aws/install_upi.md](https://github.com/openshift/installer/blob/master/docs/user/aws/install_upi.md)
-
-
-The following diagram outlines the infrastructure architecture.
-![OpenShift 4 on AWS](img/openshift_aws_network.png)
+* [Airgapped installation](#airgapped-installation)
+* [Removal procedure](#removal-procedure)
+* [Advanced topics](#advanced-topics)
 
 ## Terraform Automation
 
@@ -53,6 +41,18 @@ This project uses mainly Terraform as infrastructure management and installation
    oc version
    ```
 
+4. Install wget command:
+  - MacOS:
+    ```
+    brew install wget
+    ```
+  - Linux: (choose the command depending on your distribution)
+    ```
+    apt-get install wget
+    yum install wget
+    zypper install wget
+    ```
+
 4. Get the Terraform code
 
    ```bash
@@ -61,8 +61,7 @@ This project uses mainly Terraform as infrastructure management and installation
 
 5. Prepare the DNS
 
-   OpenShift requires a valid DNS domain, you can get one from AWS Route53 or using existing domain and registrar. The DNS must be registered as a Public Hosted Zone in Route53.
-
+   OpenShift requires a valid DNS domain, you can get one from AWS Route53 or using existing domain and registrar. The DNS must be registered as a Public Hosted Zone in Route53. (Even if you plan to use an airgapped environment)
 
 6. Prepare AWS Account Access
 
@@ -75,9 +74,24 @@ This project uses mainly Terraform as infrastructure management and installation
     export AWS_ACCESS_KEY_ID=RKXXXXXXXXXXXXXXX
     export AWS_SECRET_ACCESS_KEY=LXXXXXXXXXXXXXXXXXX/ng
     export AWS_DEFAULT_REGION=us-east-2
+     ```
 
-    aws s3 ls
-   ```
+## Infrastructure Architecture
+
+For detail on OpenShift UPI, please reference the following:
+
+* [https://docs.openshift.com/container-platform/4.1/installing/installing_aws_user_infra/installing-aws-user-infra.html](https://docs.openshift.com/container-platform/4.1/installing/installing_aws_user_infra/installing-aws-user-infra.html)
+* [https://github.com/openshift/installer/blob/master/docs/user/aws/install_upi.md](https://github.com/openshift/installer/blob/master/docs/user/aws/install_upi.md)
+
+The terraform code in this repository supports 3 installation modes:
+
+- External facing cluster in a private network: ![External Open](img/openshift_aws_external.png)
+
+- Internal cluster with internet access: ![Internal](img/openshift_aws_internal.png)
+
+- Airgapped cluster with no access: ![Airgapped](img/openshift_aws_airgapped.png)
+
+There are other installation modes that are possible with this terraform set, but we have not tested all the possible combinations, see [Advanced usage](#advanced-topics)
 
 ## Installation Procedure
 
@@ -125,21 +139,21 @@ aws_region = "us-east-1"
 aws_publish_strategy = "External"
 ```
 
-|name | required                        | description and value        |
+|name | required  | description and value        |
 |----------------|------------|--------------|
 | `cluster_id` | yes | This id will be prefixed to all the AWS infrastructure resources provisioned with the script - typically using the clustername as its prefix.  |
-| `clustername`     | yes          | The name of the OpenShift cluster you will install     |
+| `clustername`     | yes  | The name of the OpenShift cluster you will install     |
 | `base_domain` | yes | The domain that has been created in Route53 public hosted zone |
 | `openshift_pull_secret` | no | The value refers to a file name that contain downloaded pull secret from https://cloud.redhat.com/openshift/install; the default name is `openshift_pull_secret.json` |
 | `openshift_installer_url` | no | The URL to the download site for Red Hat OpenShift installation and client codes.  |
-| `aws_region`   | yes         | AWS region that the VPC will be created in.  By default, uses `us-east-2`.  Note that for an HA installation, the AWS selected region should have at least 3 availability zones. |
-| `aws_extra_tags`     | no          | AWS tag to identify a resource for example owner:myname     |
+| `aws_region`   | yes  | AWS region that the VPC will be created in.  By default, uses `us-east-2`.  Note that for an HA installation, the AWS selected region should have at least 3 availability zones. |
+| `aws_extra_tags`  | no  | AWS tag to identify a resource for example owner:myname     |
 | `aws_ami` | yes | Red Hat CoreOS ami for your region (see [here](https://docs.openshift.com/container-platform/4.2/installing/installing_aws_user_infra/installing-aws-user-infra.html#installation-aws-user-infra-rhcos-ami_installing-aws-user-infra)). Other platforms images information can be found [here](https://github.com/openshift/installer/blob/master/data/data/rhcos.json) |
 | `aws_secret_access_key` | yes | adding aws_secret_access_key to the cluster |
 | `aws_access_key_id` | yes | adding aws_access_key_id to the cluster |
 | `aws_azs` | yes | list of availability zones to deploy VMs |
 | `aws_publish_strategy` | no | Whether to publish the API endpoint externally - Default: "External" |
-
+| `airgapped` | no | A map with enabled (true/false) and repository name - This must be used with `aws_publish_strategy` of `Internal` |
 
 
 See [Terraform documentation](https://www.terraform.io/intro/getting-started/variables.html) for the format of this file.
@@ -156,22 +170,6 @@ Run the terraform provisioning:
 terraform plan
 terraform apply
 ```
-
-## Removal Procedure
-
-For the removal of the cluster, there are several considerations for removing AWS resources that are created by the cluster directly, but not using Terraform. These resources are unknown to terraform and must be deleted manually from AWS console.
-Some of these resources also hamper the ability to run `terraform destroy` as it becomes a dependent resource that prevent its parent resource to be deleted.
-
-The cluster created resources are:
-
-- Resources that prevents `terraform destroy` to be completed:
-  - Worker EC2 instances
-  - Application Load Balancer (classic load balancer) for the `*.apps.<cluster>.<domain>`
-  - Security Group for the application load balancer
-- Other resources that are not deleted:
-  - S3 resource for image-registry
-  - IAM users for the cluster
-  - Public Route53 Record set associated with the application load balancer
 
 ## Airgapped Installation
 
@@ -249,3 +247,21 @@ airgapped = {
 ```
 
 Create your cluster and then associate the private Hosted Zone Record in Route53 with the loadbalancer for the `*.apps.<cluster>.<domain>`.  
+
+## Removal Procedure
+
+For the removal of the cluster, there are several considerations for removing AWS resources that are created by the cluster directly, but not using Terraform. These resources are unknown to terraform and must be deleted manually from AWS console.
+Some of these resources also hamper the ability to run `terraform destroy` as it becomes a dependent resource that prevent its parent resource to be deleted.
+
+The cluster created resources are:
+
+- Resources that prevents `terraform destroy` to be completed:
+  - Worker EC2 instances
+  - Application Load Balancer (classic load balancer) for the `*.apps.<cluster>.<domain>`
+  - Security Group for the application load balancer
+- Other resources that are not deleted:
+  - S3 resource for image-registry
+  - IAM users for the cluster
+  - Public Route53 Record set associated with the application load balancer
+
+## Advanced topics
