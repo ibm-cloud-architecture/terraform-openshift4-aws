@@ -42,16 +42,17 @@ This project uses mainly Terraform as infrastructure management and installation
    ```
 
 4. Install wget command:
-  - MacOS:
-    ```
-    brew install wget
-    ```
-  - Linux: (choose the command depending on your distribution)
-    ```
-    apt-get install wget
-    yum install wget
-    zypper install wget
-    ```
+
+    - MacOS:
+      ```
+      brew install wget
+      ```
+    - Linux: (choose the command depending on your distribution)
+      ```
+      apt-get install wget
+      yum install wget
+      zypper install wget
+      ```
 
 4. Get the Terraform code
 
@@ -74,7 +75,7 @@ This project uses mainly Terraform as infrastructure management and installation
     export AWS_ACCESS_KEY_ID=RKXXXXXXXXXXXXXXX
     export AWS_SECRET_ACCESS_KEY=LXXXXXXXXXXXXXXXXXX/ng
     export AWS_DEFAULT_REGION=us-east-2
-     ```
+    ```
 
 ## Infrastructure Architecture
 
@@ -179,43 +180,43 @@ Setting up the mirror repository using AWS ECR:
 
 1. Create the repository
 
-  ```
-  aws ecr create-repository --repository-name ocp435
-  ```
+    ```
+    aws ecr create-repository --repository-name ocp435
+    ```
 
 2. Prepare your credential to access the ECR repository (ie the credential only valid for 12 hrs)
 
-  ```
-  aws ecr get-login
-  ```
+    ```
+    aws ecr get-login
+    ```
 
-  and extract the password (`-p` argument) and create a Base64 string:
+    Extract the password token (`-p` argument) and create a Base64 string:
 
-  ```
-  echo "AWS:<token>" | base64 -w0
-  ```
+    ```
+    echo "AWS:<token>" | base64 -w0
+    ```
 
-  and put that into your pull secret:
+    Put that into your pull secret:
 
-  ```
-  {"353456611220.dkr.ecr.us-east-1.amazonaws.com":{"auth":"<base64string>","email":"abc@example.com"}}
-  ```
+    ```
+    {"353456611220.dkr.ecr.us-east-1.amazonaws.com":{"auth":"<base64string>","email":"abc@example.com"}}
+    ```
 
 3. Mirror quay.io and other OpenShift source into your repository
 
-  ```
-  export OCP_RELEASE="4.3.5-x86_64"
-  export LOCAL_REGISTRY='1234567812345678.dkr.ecr.us-east-1.amazonaws.com'
-  export LOCAL_REPOSITORY='ocp435'
-  export PRODUCT_REPO='openshift-release-dev'
-  export LOCAL_SECRET_JSON='/home/ec2-user/openshift_pull_secret.json'
-  export RELEASE_NAME="ocp-release"
+    ```
+    export OCP_RELEASE="4.3.5-x86_64"
+    export LOCAL_REGISTRY='1234567812345678.dkr.ecr.us-east-1.amazonaws.com'
+    export LOCAL_REPOSITORY='ocp435'
+    export PRODUCT_REPO='openshift-release-dev'
+    export LOCAL_SECRET_JSON='/home/ec2-user/openshift_pull_secret.json'
+    export RELEASE_NAME="ocp-release"
 
-  oc adm -a ${LOCAL_SECRET_JSON} release mirror --max-per-registry=1 \
-     --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE} \
-     --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} \
-     --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}
-  ```
+    oc adm -a ${LOCAL_SECRET_JSON} release mirror --max-per-registry=1 \
+       --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE} \
+       --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} \
+       --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}
+    ```
 
 Once the mirror registry is created - use the terraform.tfvars similar to below:
 
@@ -239,12 +240,14 @@ aws_azs = [
   "us-east-1c"
   ]
 aws_region = "us-east-1"
-aws_publish_strategy = "External"
+aws_publish_strategy = "Internal"
 airgapped = {
   enabled = true
   repository = "1234567812345678.dkr.ecr.us-east-1.amazonaws.com/ocp435"
 }
 ```
+
+**Note**: To use `airgapped.enabled` of `true` must be done with `aws_publish_strategy` of `Internal` otherwise the deployment will fail.
 
 Create your cluster and then associate the private Hosted Zone Record in Route53 with the loadbalancer for the `*.apps.<cluster>.<domain>`.  
 
@@ -265,3 +268,11 @@ The cluster created resources are:
   - Public Route53 Record set associated with the application load balancer
 
 ## Advanced topics
+
+Additional configurations and customization of the implementation can be performed by changing some of the default variables.
+You can check the variable contents in the following terraform files:
+
+- variable-aws.tf: AWS related customization, such as machine sizes and network changes
+- config.tf: common installation variables for installation (not cloud platform specific)
+
+**Note**: Not all possible combinations of options has been tested - use them at your own risk. 
