@@ -13,7 +13,7 @@ data "aws_vpc" "cluster_vpc" {
 }
 
 data "aws_subnet" "public" {
-  count = var.public_subnets == null ? length(var.availability_zones) : length(var.public_subnets)
+  count = var.public_subnets == null ? (var.airgapped.enabled ? 0 : length(var.availability_zones)) : length(var.public_subnets)
 
   id = var.public_subnets == null ? aws_subnet.public_subnet[count.index].id : var.public_subnets[count.index]
 }
