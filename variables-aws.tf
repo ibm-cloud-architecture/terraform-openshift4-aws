@@ -126,3 +126,11 @@ variable "aws_publish_strategy" {
   description = "The cluster publishing strategy, either Internal or External"
   default = "External"
 }
+
+variable "airgapped" {
+  type = map(string)
+  default = {
+    airgapped  = false
+    repository = ""
+  }
+}
