@@ -106,3 +106,11 @@ variable "dns_public_id" {
   type = string
   description = "public route53 id"
 }
+
+variable "airgapped" {
+  type = map(string)
+  default = {
+    airgapped  = false
+    repository = ""
+  }
+}

@@ -42,6 +42,7 @@ module "installer" {
   aws_worker_root_volume_type = var.aws_worker_root_volume_type
   aws_worker_availability_zones = var.aws_azs
   aws_worker_instance_type = var.aws_worker_instance_type
+  airgapped = var.airgapped
 }
 
 module "vpc" {
@@ -54,7 +55,7 @@ module "vpc" {
   public_subnets   = var.aws_public_subnets
   private_subnets  = var.aws_private_subnets
   publish_strategy = var.aws_publish_strategy
-
+  airgapped = var.airgapped
   availability_zones = var.aws_azs
 
   tags = local.tags

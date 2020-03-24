@@ -100,6 +100,14 @@ platform:
     region: ${var.aws_region}
 pullSecret: '${file(var.openshift_pull_secret)}'
 sshKey: '${tls_private_key.installkey.public_key_openssh}'
+%{if var.airgapped["enabled"]}imageContentSources:
+- mirrors:
+  - ${var.airgapped["repository"]}
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - ${var.airgapped["repository"]}
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+%{endif}
 EOF
 }
 
@@ -200,6 +208,7 @@ resource "null_resource" "manifest_cleanup_dns_config" {
 
 #redo the dns config
 resource "local_file" "dns_config" {
+  count = var.airgapped.enabled ? 0 : 1
   depends_on = [
     null_resource.manifest_cleanup_dns_config
   ]
@@ -317,12 +326,105 @@ spec:
 EOF
 }
 
+#redo the worker machineset
+resource "local_file" "ingresscontroller" {
+  count           = var.airgapped.enabled ? 1 : 0
+
+  depends_on = [
+    null_resource.generate_manifests
+  ]
+  file_permission = "0644"
+  filename = "${path.module}/temp/openshift/99_default_ingress_controller.yml"
+  content = <<EOF
+apiVersion: operator.openshift.io/v1
+kind: IngressController
+metadata:
+  name: default
+  namespace: openshift-ingress-operator
+spec:
+  replicas: 2
+  endpointPublishingStrategy:
+    type: Private
+EOF
+}
+
+resource "local_file" "awssecrets1" {
+  count           = var.airgapped.enabled ? 1 : 0
+
+  depends_on = [
+    null_resource.generate_manifests
+  ]
+  file_permission = "0644"
+  filename        =  "${path.module}/temp/openshift/99_awssecrets_image_registry.yml"
+
+  content = <<EOF
+apiVersion: v1
+data:
+  aws_access_key_id: ${base64encode(var.aws_access_key_id)}
+  aws_secret_access_key: ${base64encode(var.aws_secret_access_key)}
+kind: Secret
+metadata:
+  name: installer-cloud-credentials
+  namespace: openshift-image-registry
+type: Opaque
+EOF
+}
+
+resource "local_file" "awssecrets2" {
+  count           = var.airgapped.enabled ? 1 : 0
+
+  depends_on = [
+    null_resource.generate_manifests
+  ]
+  file_permission = "0644"
+  filename        =  "${path.module}/temp/openshift/99_awssecrets_ingress.yml"
+
+  content = <<EOF
+apiVersion: v1
+data:
+  aws_access_key_id: ${base64encode(var.aws_access_key_id)}
+  aws_secret_access_key: ${base64encode(var.aws_secret_access_key)}
+kind: Secret
+metadata:
+  name: cloud-credentials
+  namespace: openshift-ingress-operator
+type: Opaque
+EOF
+}
+
+resource "local_file" "awssecrets3" {
+  count           = var.airgapped.enabled ? 1 : 0
+
+  depends_on = [
+    null_resource.generate_manifests
+  ]
+  file_permission = "0644"
+  filename        =  "${path.module}/temp/openshift/99_awssecrets_machine_api.yml"
+
+  content = <<EOF
+apiVersion: v1
+data:
+  aws_access_key_id: ${base64encode(var.aws_access_key_id)}
+  aws_secret_access_key: ${base64encode(var.aws_secret_access_key)}
+kind: Secret
+metadata:
+  name: aws-cloud-credentials
+  namespace: openshift-machine-api
+type: Opaque
+EOF
+}
+
 # build the bootstrap ignition config
 resource "null_resource" "generate_ignition_config" {
   depends_on = [
     null_resource.manifest_cleanup_control_plane_machineset,
     local_file.worker_machineset,
     local_file.dns_config,
+    local_file.ingresscontroller,
+    local_file.awssecrets1,
+    local_file.awssecrets2,
+    local_file.awssecrets3,
+    local_file.airgapped_registry_upgrades,
     local_file.cluster_infrastructure_config,
   ]
 
@@ -417,4 +519,26 @@ resource "null_resource" "get_auth_config" {
     when    = destroy
     command = "rm ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
   }
+}
+
+resource "local_file" "airgapped_registry_upgrades" {
+  count    = var.airgapped["enabled"] ? 1 : 0
+  filename = "${path.module}/temp/openshift/99_airgapped_registry_upgrades.yaml"
+  depends_on = [
+    null_resource.generate_manifests,
+  ]
+  content  = <<EOF
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: airgapped
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - ${var.airgapped["repository"]}
+    source: quay.io/openshift-release-dev/ocp-release
+  - mirrors:
+    - ${var.airgapped["repository"]}
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
 }
