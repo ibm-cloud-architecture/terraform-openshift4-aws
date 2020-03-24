@@ -40,7 +40,7 @@ resource "aws_vpc_endpoint" "private_ecr" {
   private_dns_enabled = true
 
   security_group_ids = [
-     aws_security_group.private_ecr_api.id
+     aws_security_group.private_ecr_api[0].id
   ]
 
   subnet_ids =  aws_subnet.private_subnet.*.id
@@ -67,7 +67,7 @@ resource "aws_vpc_endpoint" "private_elb" {
   private_dns_enabled = true
 
   security_group_ids = [
-     aws_security_group.private_elb_api.id
+     aws_security_group.private_elb_api[0].id
   ]
 
   subnet_ids =  aws_subnet.private_subnet.*.id
