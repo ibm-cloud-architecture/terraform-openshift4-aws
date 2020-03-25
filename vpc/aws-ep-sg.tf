@@ -1,6 +1,6 @@
 resource "aws_security_group" "private_ec2_api" {
   name =  "${var.cluster_id}-ec2-api"
-  vpc_id =  aws_vpc.new_vpc[0].id
+  vpc_id =  data.aws_vpc.cluster_vpc.id
 
   tags =  merge(
     var.tags,
@@ -40,7 +40,7 @@ resource "aws_security_group_rule" "private_ec2_api_egress" {
 resource "aws_security_group" "private_ecr_api" {
   count = var.airgapped.enabled ? 1 : 0
   name =  "${var.cluster_id}-ecr-api"
-  vpc_id =  aws_vpc.new_vpc[0].id
+  vpc_id =  data.aws_vpc.cluster_vpc.id
 
   tags =  merge(
     var.tags,
@@ -82,7 +82,7 @@ resource "aws_security_group_rule" "private_ecr_api_egress" {
 resource "aws_security_group" "private_elb_api" {
   count = var.airgapped.enabled ? 1 : 0
   name =  "${var.cluster_id}-elb-api"
-  vpc_id =  aws_vpc.new_vpc[0].id
+  vpc_id =  data.aws_vpc.cluster_vpc.id
 
   tags =  merge(
     var.tags,

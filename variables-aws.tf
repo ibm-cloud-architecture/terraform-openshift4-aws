@@ -130,7 +130,7 @@ variable "aws_publish_strategy" {
 variable "airgapped" {
   type = map(string)
   default = {
-    airgapped  = false
+    enabled  = false
     repository = ""
   }
 }
