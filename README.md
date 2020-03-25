@@ -159,6 +159,8 @@ aws_publish_strategy = "External"
 
 See [Terraform documentation](https://www.terraform.io/intro/getting-started/variables.html) for the format of this file.
 
+### Deploying the cluster
+
 Initialize the Terraform:
 
 ```bash
@@ -171,6 +173,16 @@ Run the terraform provisioning:
 terraform plan
 terraform apply
 ```
+
+### Removing bootstrap node
+ 
+Once the cluster is installed, the bootstrap node is no longer used at all. One of the indication that the bootstrap has been completed is that the API load balancer target group shows that the bootstrap address is `unhealthy`. 
+
+```
+terraform destroy -target=module.bootstrap.aws_instance.bootstrap
+```
+
+
 
 ## Airgapped Installation
 
