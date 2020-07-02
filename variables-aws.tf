@@ -121,6 +121,12 @@ variable "aws_private_subnets" {
   description = "(optional) Existing private subnets into which the cluster should be installed."
 }
 
+variable "private_ssh_key_file" {
+  type        = string
+  description = "path to an unencrypted PEM-encoded private SSH key"
+  default     = "~/.ssh/id_rsa"
+}
+
 variable "aws_publish_strategy" {
   type = string
   description = "The cluster publishing strategy, either Internal or External"

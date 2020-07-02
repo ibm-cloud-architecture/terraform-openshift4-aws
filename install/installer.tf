@@ -99,7 +99,7 @@ platform:
   aws:
     region: ${var.aws_region}
 pullSecret: '${file(var.openshift_pull_secret)}'
-sshKey: '${tls_private_key.installkey.public_key_openssh}'
+sshKey: '${data.tls_public_key.installkey.public_key_openssh}'
 %{if var.airgapped["enabled"]}imageContentSources:
 - mirrors:
   - ${var.airgapped["repository"]}

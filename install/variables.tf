@@ -55,14 +55,11 @@ variable "aws_worker_root_volume_size" {
 
 variable "aws_worker_root_volume_iops" {
   type = string
-
   description = <<EOF
 The amount of provisioned IOPS for the root block device of worker nodes.
 Ignored if the volume type is not io1.
 EOF
-
 }
-
 
 variable "master_count" {
   type        = number
@@ -79,6 +76,12 @@ variable "openshift_installer_url" {
   type        = string
   description = "The URL to download OpenShift installer."
   default     = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+}
+
+variable "private_ssh_key_file" {
+  type        = string
+  description = "path to an unencrypted PEM-encoded private SSH key"
+  default     = "~/.ssh/id_rsa"
 }
 
 variable "aws_access_key_id" {

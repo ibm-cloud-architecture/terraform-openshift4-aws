@@ -34,6 +34,7 @@ module "installer" {
   aws_region = var.aws_region
   aws_access_key_id = var.aws_access_key_id
   aws_secret_access_key = var.aws_secret_access_key
+  private_ssh_key_file = var.private_ssh_key_file
   vpc_cidr_block = var.machine_cidr
   master_count = length(var.aws_azs)
   openshift_pull_secret = var.openshift_pull_secret

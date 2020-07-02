@@ -15,10 +15,10 @@ output "worker_ign_64" {
 }
 
 output "private_ssh_key" {
-    value =  tls_private_key.installkey.private_key_pem
+    value =  data.tls_public_key.installkey.private_key_pem
 }
 
 output "public_ssh_key" {
-    value =  tls_private_key.installkey.public_key_openssh
+    value =  data.tls_public_key.installkey.public_key_openssh
 }
 
