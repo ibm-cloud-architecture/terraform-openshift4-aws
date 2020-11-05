@@ -1,5 +1,9 @@
 # Automated OpenShift v4 installation on AWS
 
+---
+**Important**: use branch ocp46 to install OpenShift version 4.6.x or later
+---
+
 This project automates the Red Hat OpenShift Container Platform 4.x installation on Amazon AWS platform. It focuses on the OpenShift User-provided infrastructure installation (UPI) where implementers provide pre-existing infrastructure including VMs, networking, load balancers, DNS configuration etc.
 
 * [Terraform Automation](#terraform-automation)
@@ -278,6 +282,9 @@ The cluster created resources are:
   - S3 resource for image-registry
   - IAM users for the cluster
   - Public Route53 Record set associated with the application load balancer
+
+
+**Update 11/2020**: A `delocp.sh` is added to remove resources - if you have the aws CLI; however the script does not account for timing just yet.
 
 ## Advanced topics
 
