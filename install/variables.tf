@@ -102,10 +102,10 @@ variable "aws_worker_availability_zones" {
   description = "The availability zones to provision for workers.  Worker instances are created by the machine-API operator, but this variable controls their supporting infrastructure (subnets, routing, etc.)."
 }
 
-variable "dns_public_id" {
-  type = string
-  description = "public route53 id"
-}
+#variable "dns_public_id" {
+#  type = string
+#  description = "public route53 id"
+#}
 
 variable "airgapped" {
   type = map(string)

@@ -85,6 +85,7 @@ controlPlane:
   hyperthreading: Enabled
   name: master
   replicas: ${var.master_count}
+fips: true
 metadata:
   name: ${var.clustername}
 networking:
@@ -191,47 +192,47 @@ status:
 EOF
 }
 # modify manifests/cluster-dns-02-config.yml
-resource "null_resource" "manifest_cleanup_dns_config" {
-  depends_on = [
-    null_resource.generate_manifests
-  ]
-
-  triggers = {
-    install_config =  data.template_file.install_config_yaml.rendered
-    local_file     =  local_file.install_config.id
-  }
-
-  provisioner "local-exec" {
-    command = "rm -f ${path.module}/temp/manifests/cluster-dns-02-config.yml"
-  }
-}
-
+#resource "null_resource" "manifest_cleanup_dns_config" {
+#  depends_on = [
+#    null_resource.generate_manifests
+#  ]
+#
+#  triggers = {
+#    install_config =  data.template_file.install_config_yaml.rendered
+#    local_file     =  local_file.install_config.id
+#  }
+#
+#  provisioner "local-exec" {
+#    command = "rm -f ${path.module}/temp/manifests/cluster-dns-02-config.yml"
+#  }
+#}
+#
 #redo the dns config
-resource "local_file" "dns_config" {
-  count = var.airgapped.enabled ? 0 : 1
-  depends_on = [
-    null_resource.manifest_cleanup_dns_config
-  ]
-
-  file_permission = "0644"
-  filename        = "${path.module}/temp/manifests/cluster-dns-02-config.yml"
-  content         = <<EOF
-apiVersion: config.openshift.io/v1
-kind: DNS
-metadata:
-  creationTimestamp: null
-  name: cluster
-spec:
-  baseDomain: ${var.clustername}.${var.domain}
-  privateZone:
-      tags:
-        Name: ${local.infrastructure_id}-int
-        kubernetes.io/cluster/${local.infrastructure_id}: owned
-  publicZone:
-    id: ${var.dns_public_id}
-status: {}
-EOF
-}
+#resource "local_file" "dns_config" {
+#  count = var.airgapped.enabled ? 0 : 1
+#  depends_on = [
+#    null_resource.manifest_cleanup_dns_config
+#  ]
+#
+#  file_permission = "0644"
+#  filename        = "${path.module}/temp/manifests/cluster-dns-02-config.yml"
+#  content         = <<EOF
+#apiVersion: config.openshift.io/v1
+#kind: DNS
+#metadata:
+#  creationTimestamp: null
+#  name: cluster
+#spec:
+#  baseDomain: ${var.clustername}.${var.domain}
+#  privateZone:
+#      tags:
+#        Name: ${local.infrastructure_id}-int
+#        kubernetes.io/cluster/${local.infrastructure_id}: owned
+#  publicZone:
+#    id: ${var.dns_public_id}
+#status: {}
+#EOF
+#}
 
 # remove these machinesets, we will rewrite them using the security group and subnets that we created
 resource "null_resource" "manifest_cleanup_worker_machineset" {
@@ -419,7 +420,6 @@ resource "null_resource" "generate_ignition_config" {
   depends_on = [
     null_resource.manifest_cleanup_control_plane_machineset,
     local_file.worker_machineset,
-    local_file.dns_config,
     local_file.ingresscontroller,
     local_file.awssecrets1,
     local_file.awssecrets2,

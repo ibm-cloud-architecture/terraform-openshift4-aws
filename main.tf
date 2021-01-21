@@ -27,7 +27,7 @@ module "installer" {
   source = "./install"
 
   ami = aws_ami_copy.main.id
-  dns_public_id = module.dns.public_dns_id
+  # dns_public_id = module.dns.public_dns_id
   infrastructure_id = var.cluster_id
   clustername = var.clustername
   domain = var.base_domain
@@ -62,22 +62,6 @@ module "vpc" {
   tags = local.tags
 }
 
-module "dns" {
-  source = "./route53"
-
-  api_external_lb_dns_name = module.vpc.aws_lb_api_external_dns_name
-  api_external_lb_zone_id  = module.vpc.aws_lb_api_external_zone_id
-  api_internal_lb_dns_name = module.vpc.aws_lb_api_internal_dns_name
-  api_internal_lb_zone_id  = module.vpc.aws_lb_api_internal_zone_id
-  base_domain              = var.base_domain
-  cluster_domain           = "${var.clustername}.${var.base_domain}"
-  cluster_id               = var.cluster_id
-  etcd_count               = length(var.aws_azs)
-  etcd_ip_addresses        = flatten(module.masters.ip_addresses)
-  tags                     = local.tags
-  vpc_id                   = module.vpc.vpc_id
-  publish_strategy         = var.aws_publish_strategy
-}
 
 resource "aws_ami_copy" "main" {
   name              = "${var.cluster_id}-master"
