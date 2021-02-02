@@ -17,8 +17,8 @@ resource "aws_vpc_endpoint" "private_ec2" {
   subnet_ids =  aws_subnet.private_subnet.*.id
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-ec2-vpce"
+    tomap(
+      {"Name" = "${var.cluster_id}-ec2-vpce"}
     )
   )
 
@@ -44,8 +44,8 @@ resource "aws_vpc_endpoint" "private_ecr" {
   subnet_ids =  aws_subnet.private_subnet.*.id
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-ecr-vpce"
+    tomap(
+      {"Name" = "${var.cluster_id}-ecr-vpce"}
     )
   )
 
@@ -71,8 +71,8 @@ resource "aws_vpc_endpoint" "private_elb" {
   subnet_ids =  aws_subnet.private_subnet.*.id
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-elb-vpce"
+    tomap(
+      {"Name" =  "${var.cluster_id}-elb-vpce"}
     )
   )
 

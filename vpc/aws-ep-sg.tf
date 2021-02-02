@@ -4,8 +4,8 @@ resource "aws_security_group" "private_ec2_api" {
 
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-private-ec2-api",
+    tomap(
+      {"Name" = "${var.cluster_id}-private-ec2-api"}
     )
   )
 }
@@ -44,8 +44,8 @@ resource "aws_security_group" "private_ecr_api" {
 
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-private-ecr-api",
+    tomap(
+      {"Name" = "${var.cluster_id}-private-ecr-api"}
     )
   )
 }
@@ -86,8 +86,8 @@ resource "aws_security_group" "private_elb_api" {
 
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-private-elb-api",
+    tomap(
+      {"Name" = "${var.cluster_id}-private-elb-api"}
     )
   )
 }

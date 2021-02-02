@@ -76,6 +76,9 @@ This project uses mainly Terraform as infrastructure management and installation
     export AWS_SECRET_ACCESS_KEY=LXXXXXXXXXXXXXXXXXX/ng
     export AWS_DEFAULT_REGION=us-east-2
     ```
+    For convinience you can put the above env. variables in the file, i.e. aws-secrets.sh file. Than run 
+    . aws-secrets.sh
+    Attention! Do not put this file into the source control system and keep it safe. 
 
 ## Infrastructure Architecture
 

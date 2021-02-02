@@ -1,7 +1,17 @@
 locals {
   public_endpoints = var.publish_strategy == "External" ? true : false
 }
-
+terraform {
+  required_providers {
+    ignition = {
+      source = "community-terraform-providers/ignition"
+      #version = "1.2.1"
+    }
+  }
+}
+provider "ignition" {
+  # Configuration options
+}
 resource "aws_s3_bucket" "ignition" {
   acl = "private"
 

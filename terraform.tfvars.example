@@ -1,20 +1,20 @@
-cluster_id = "ocp4-9n2nn"
-clustername = "ocp4"
-base_domain = "example.com"
+cluster_id = "fips-rhocp46"
+clustername = "fips-rhocp46"
+base_domain = "gtmaa.ga"
 openshift_pull_secret = "./openshift_pull_secret.json"
-openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.6.15/"
 
-aws_access_key_id = "AAAA"
-aws_secret_access_key = "AbcDefGhiJkl"
-aws_ami = "ami-06f85a7940faa3217"
+aws_access_key_id = "AKIAVES5H36KJ7ETCYWD"
+aws_secret_access_key = "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"
+aws_ami = "ami-0a1f868ad58ea59a7"
 aws_extra_tags = {
-  "kubernetes.io/cluster/ocp4-9n2nn" = "owned",
-  "owner" = "admin"
+  "kubernetes.io/cluster/fips-rhocp46" = "owned",
+  "owner" = "Alex.Groisman"
   }
 aws_azs = [
-  "us-east-1a",
-  "us-east-1b",
-  "us-east-1c"
+  "us-east-2a",
+  "us-east-2b",
+  "us-east-2c"
   ]
-aws_region = "us-east-1"
+aws_region = "us-east-2"
 aws_publish_strategy = "External"

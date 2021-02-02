@@ -95,6 +95,7 @@ networking:
   networkType: OpenShiftSDN
   serviceNetwork:
   - ${var.service_network_cidr}
+fips: true
 platform:
   aws:
     region: ${var.aws_region}
