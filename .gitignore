@@ -7,3 +7,6 @@
 
 # .tfvars files
 *.tfvars
+
+# OS X files
+.DS_Store
