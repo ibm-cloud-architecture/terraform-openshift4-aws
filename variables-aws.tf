@@ -7,6 +7,10 @@ EOF
   default = "1.0"
 }
 
+variable "openshift_version" {
+  type = string
+}
+
 variable "aws_bootstrap_instance_type" {
   type = string
   description = "Instance type for the bootstrap node. Default: `i3.xlarge`."

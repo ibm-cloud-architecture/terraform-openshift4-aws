@@ -114,3 +114,8 @@ variable "airgapped" {
     repository = ""
   }
 }
+
+variable "openshift_version" {
+  type=string
+  default = "4.7.7"
+}

@@ -9,7 +9,8 @@ locals {
 
 provider "aws" {
   region = var.aws_region
-
+  access_key = var.aws_access_key_id
+  secret_key = var.aws_secret_access_key
   # Validation of AWS Bahrain region was added in AWS TF provider v2.22
   # so we skip when installing in me-south-1.
   skip_region_validation = var.aws_region == "me-south-1"
@@ -44,6 +45,7 @@ module "installer" {
   aws_worker_availability_zones = var.aws_azs
   aws_worker_instance_type = var.aws_worker_instance_type
   airgapped = var.airgapped
+  openshift_version = var.openshift_version
 }
 
 module "vpc" {
