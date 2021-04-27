@@ -7,3 +7,12 @@
 
 # .tfvars files
 *.tfvars
+*.log
+install/.openshift_install.log
+pull-secret
+install/oc
+install/kubectl
+pull-secret
+install/.DS_Store
+install/.openshift_install.log
+*.log
