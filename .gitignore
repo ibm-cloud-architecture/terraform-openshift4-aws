@@ -16,3 +16,4 @@ pull-secret
 install/.DS_Store
 install/.openshift_install.log
 *.log
+.DS_Store
