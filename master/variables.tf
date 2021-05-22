@@ -50,6 +50,17 @@ variable "root_volume_type" {
   description = "The type of volume for the root block device."
 }
 
+variable "root_volume_encrypted" {
+  type        = bool
+  default     = true
+  description = "Whether the root block device should be encrypted."
+}
+
+variable "root_volume_kms_key_id" {
+  type        = string
+  description = "The KMS key id that should be used tpo encrypt the root block device."
+}
+
 variable "tags" {
   type        = map(string)
   default     = {}

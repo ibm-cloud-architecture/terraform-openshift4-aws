@@ -6,7 +6,7 @@ locals {
 resource "aws_vpc" "new_vpc" {
   count = var.vpc == null ? 1 : 0
 
-  cidr_block           = var.cidr_block
+  cidr_block           = var.cidr_blocks[0]
   enable_dns_hostnames = true
   enable_dns_support   = true
 
@@ -27,6 +27,8 @@ resource "aws_vpc_endpoint" "s3" {
     aws_route_table.private_routes.*.id,
     aws_route_table.default.*.id,
   )
+
+  tags = var.tags
 }
 
 resource "aws_vpc_dhcp_options" "main" {

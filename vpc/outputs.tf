@@ -3,7 +3,7 @@ output "vpc_id" {
 }
 
 output "vpc_cidrs" {
-  value = [data.aws_vpc.cluster_vpc.cidr_block]
+  value = var.cidr_blocks
 }
 
 output "az_to_private_subnet_id" {
