@@ -2,7 +2,25 @@ locals {
   public_endpoints = var.publish_strategy == "External" ? true : false
 }
 
+terraform {
+  required_providers {
+    ignition = {
+      source = "community-terraform-providers/ignition"
+      version = "2.1.2"
+    }
+  }
+}
+
+provider "ignition" {
+  # Configuration options
+}
+
+data "aws_partition" "current" {}
+
+data "aws_ebs_default_kms_key" "current" {}
+
 resource "aws_s3_bucket" "ignition" {
+  bucket = var.ignition_bucket
   acl = "private"
 
   tags = merge(
@@ -60,7 +78,7 @@ resource "aws_iam_role" "bootstrap" {
         {
             "Action": "sts:AssumeRole",
             "Principal": {
-                "Service": "ec2.amazonaws.com"
+                "Service": "ec2.${data.aws_partition.current.dns_suffix}"
             },
             "Effect": "Allow",
             "Sid": ""
@@ -119,8 +137,7 @@ resource "aws_instance" "bootstrap" {
   iam_instance_profile        = aws_iam_instance_profile.bootstrap.name
   instance_type               = var.instance_type
   subnet_id                   = var.subnet_id
-  user_data                   = replace(data.ignition_config.redirect.rendered, "2.1.0", "3.1.0")
-  # data.ignition_config.redirect.rendered
+  user_data                   = data.ignition_config.redirect.rendered
   vpc_security_group_ids      = flatten([var.vpc_security_group_ids, aws_security_group.bootstrap.id])
   associate_public_ip_address = local.public_endpoints
 
@@ -141,6 +158,8 @@ resource "aws_instance" "bootstrap" {
     volume_type = var.volume_type
     volume_size = var.volume_size
     iops        = var.volume_type == "io1" ? var.volume_iops : 0
+    encrypted   = true
+    kms_key_id  = var.volume_kms_key_id == "" ? data.aws_ebs_default_kms_key.current.key_arn : var.volume_kms_key_id
   }
 
   volume_tags = merge(
