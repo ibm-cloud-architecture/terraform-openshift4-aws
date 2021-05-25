@@ -455,6 +455,31 @@ resource "null_resource" "generate_ignition_config" {
   }
 }
 
+resource "null_resource" "extractInfrastructureID" {
+  depends_on = [
+    null_resource.generate_ignition_config
+  ]
+
+  provisioner "local-exec" {
+    when    = create
+    command = "cat ${path.module}/temp/metadata.json | jq -r .infraID | tr -d '\n' > ${path.module}/infraID"
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -rf ${path.module}/infraID"
+  }
+}
+
+
+data "local_file" "infrastructureID" {
+  depends_on = [
+    null_resource.extractInfrastructureID
+  ]
+  filename        =  "${path.module}/infraID"
+
+}
+
 resource "null_resource" "cleanup" {
   provisioner "local-exec" {
     when    = destroy
