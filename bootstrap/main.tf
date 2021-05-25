@@ -11,10 +11,6 @@ terraform {
   }
 }
 
-provider "ignition" {
-  # Configuration options
-}
-
 data "aws_partition" "current" {}
 
 data "aws_ebs_default_kms_key" "current" {}
