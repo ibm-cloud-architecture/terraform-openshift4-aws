@@ -1,4 +1,3 @@
-cluster_id = "ocp4-9n2nn"
 clustername = "ocp4"
 base_domain = "example.com"
 openshift_pull_secret = "./openshift_pull_secret.json"
@@ -8,7 +7,6 @@ aws_access_key_id = "AAAA"
 aws_secret_access_key = "AbcDefGhiJkl"
 aws_ami = "ami-06f85a7940faa3217"
 aws_extra_tags = {
-  "kubernetes.io/cluster/ocp4-9n2nn" = "owned",
   "owner" = "admin"
   }
 aws_azs = [

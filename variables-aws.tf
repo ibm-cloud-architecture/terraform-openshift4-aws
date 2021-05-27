@@ -30,11 +30,6 @@ variable "aws_ami" {
   description = "AMI for all nodes.  An encrypted copy of this AMI will be used.  Example: `ami-foobar123`."
 }
 
-variable "aws_ami_region" {
-  type        = string
-  description = "Region for the AMI for all nodes.  An encrypted copy of this AMI will be used.  Example: `ami-foobar123`."
-}
-
 variable "aws_extra_tags" {
   type = map(string)
 
@@ -95,7 +90,7 @@ EOF
 
 variable "aws_master_root_volume_encrypted" {
   type = bool
-
+  default = true
   description = <<EOF
 Indicates whether the root EBS volume for master is encrypted. Encrypted Amazon EBS volumes
 may only be attached to machines that support Amazon EBS encryption.
@@ -150,6 +145,7 @@ variable "aws_publish_strategy" {
 
 variable "aws_skip_region_validation" {
   type        = bool
+  default     = false
   description = "This decides if the AWS provider should validate if the region is known."
 }
 

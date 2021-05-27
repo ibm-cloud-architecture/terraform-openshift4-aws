@@ -12,24 +12,25 @@ provider "aws" {
 
   skip_region_validation = var.aws_skip_region_validation
 
-  endpoints {
-    ec2     = lookup(var.custom_endpoints, "ec2", null)
-    elb     = lookup(var.custom_endpoints, "elasticloadbalancing", null)
-    iam     = lookup(var.custom_endpoints, "iam", null)
-    route53 = lookup(var.custom_endpoints, "route53", null)
-    s3      = lookup(var.custom_endpoints, "s3", null)
-    sts     = lookup(var.custom_endpoints, "sts", null)
-  }
+#  endpoints {
+#    ec2     = lookup(var.custom_endpoints, "ec2", null)
+#    elb     = lookup(var.custom_endpoints, "elasticloadbalancing", null)
+#    iam     = lookup(var.custom_endpoints, "iam", null)
+#    route53 = lookup(var.custom_endpoints, "route53", null)
+#    s3      = lookup(var.custom_endpoints, "s3", null)
+#    sts     = lookup(var.custom_endpoints, "sts", null)
+#  }
+
 }
 
 module "bootstrap" {
   source = "./bootstrap"
 
-  ami                      = var.aws_region == var.aws_ami_region ? var.aws_ami : aws_ami_copy.imported[0].id
+  ami                      = var.aws_ami
   instance_type            = var.aws_bootstrap_instance_type
   cluster_id               = module.installer.infraID
   ignition                 = module.installer.bootstrap_ign
-  ignition_bucket          = var.aws_ignition_bucket
+  # ignition_bucket          = var.aws_ignition_bucket
   subnet_id                = var.aws_publish_strategy == "External" ? module.vpc.az_to_public_subnet_id[var.aws_azs[0]] : module.vpc.az_to_private_subnet_id[var.aws_azs[0]]
   target_group_arns        = module.vpc.aws_lb_target_group_arns
   target_group_arns_length = module.vpc.aws_lb_target_group_arns_length
@@ -61,7 +62,7 @@ module "masters" {
   root_volume_kms_key_id   = var.aws_master_root_volume_kms_key_id
   target_group_arns        = module.vpc.aws_lb_target_group_arns
   target_group_arns_length = module.vpc.aws_lb_target_group_arns_length
-  ec2_ami                  = var.aws_region == var.aws_ami_region ? var.aws_ami : aws_ami_copy.imported[0].id
+  ec2_ami                  = var.aws_ami
   user_data_ign            = module.installer.master_ign
   publish_strategy         = var.aws_publish_strategy
 }
@@ -83,7 +84,7 @@ module "dns" {
   api_internal_lb_dns_name = module.vpc.aws_lb_api_internal_dns_name
   api_internal_lb_zone_id  = module.vpc.aws_lb_api_internal_zone_id
   base_domain              = var.base_domain
-  cluster_domain           = "${var.clustername}.${var.base_domain}"
+  cluster_domain           = "${var.cluster_name}.${var.base_domain}"
   cluster_id               = module.installer.infraID
   tags                     = local.tags
   vpc_id                   = module.vpc.vpc_id
@@ -94,7 +95,7 @@ module "dns" {
 module "vpc" {
   source = "./vpc"
 
-  cidr_block       = var.machine_cidr
+  cidr_blocks      = [ var.machine_cidr ]
   cluster_id       = module.installer.infraID
   region           = var.aws_region
   vpc              = var.aws_vpc
@@ -107,29 +108,12 @@ module "vpc" {
   tags = local.tags
 }
 
-resource "aws_ami_copy" "imported" {
-  count             = var.aws_region != var.aws_ami_region ? 1 : 0
-  name              = "${module.installer.infraID}-master"
-  source_ami_id     = var.aws_ami
-  source_ami_region = var.aws_ami_region
-  encrypted         = true
-
-  tags = merge(
-    {
-      "Name"         = "${module.installer.infraID}-ami-${var.aws_region}"
-      "sourceAMI"    = var.aws_ami
-      "sourceRegion" = var.aws_ami_region
-    },
-    local.tags,
-  )
-}
-
 module "installer" {
   source = "./install"
 
-  ami = aws_ami_copy.main.id
+  ami = var.aws_ami
   dns_public_id = module.dns.public_dns_id
-  clustername = var.clustername
+  clustername = var.cluster_name
   domain = var.base_domain
   aws_region = var.aws_region
   aws_access_key_id = var.aws_access_key_id

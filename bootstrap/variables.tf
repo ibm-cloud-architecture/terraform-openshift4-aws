@@ -13,18 +13,10 @@ variable "ignition" {
   description = "The content of the bootstrap ignition file."
 }
 
-variable "ignition_bucket" {
-  type        = string
-  description = "The S3 bucket where the ignition configuration is stored"
-}
-
-variable "ignition_stub" {
-  type        = string
-  description = <<EOF
-The stub Ignition config that should be used to boot the bootstrap instance. This already points to the presigned URL for the s3 bucket
-specified in ignition_bucket.
-EOF
-}
+#variable "ignition_bucket" {
+#  type        = string
+#  description = "The S3 bucket where the ignition configuration is stored"
+#}
 
 variable "instance_type" {
   type = string

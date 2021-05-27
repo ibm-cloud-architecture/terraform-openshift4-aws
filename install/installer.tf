@@ -1,7 +1,7 @@
-locals {
+#locals {
 #  infrastructure_id = "${var.infrastructure_id != "" ? "${var.infrastructure_id}" : "${var.clustername}-${random_id.clusterid.hex}"}"
-  infrastructure_id = var.infrastructure_id
-}
+#  infrastructure_id = 
+#}
 
 resource "null_resource" "openshift_installer" {
   provisioner "local-exec" {
@@ -182,7 +182,7 @@ status:
   apiServerInternalURI: https://api-int.${var.clustername}.${var.domain}:6443
   apiServerURL: https://api.${var.clustername}.${var.domain}:6443
   etcdDiscoveryDomain: ${var.clustername}.${var.domain}
-  infrastructureName: ${local.infrastructure_id}
+  infrastructureName: ${data.local_file.infrastructureID.content}
   platform: AWS
   platformStatus:
     aws:
@@ -225,8 +225,8 @@ spec:
   baseDomain: ${var.clustername}.${var.domain}
   privateZone:
       tags:
-        Name: ${local.infrastructure_id}-int
-        kubernetes.io/cluster/${local.infrastructure_id}: owned
+        Name: ${data.local_file.infrastructureID.content}-int
+        kubernetes.io/cluster/${data.local_file.infrastructureID.content}: owned
   publicZone:
     id: ${var.dns_public_id}
 status: {}
@@ -265,23 +265,23 @@ kind: MachineSet
 metadata:
   creationTimestamp: null
   labels:
-    machine.openshift.io/cluster-api-cluster: ${local.infrastructure_id}
-  name: ${local.infrastructure_id}-worker-${element(var.aws_worker_availability_zones, count.index)}
+    machine.openshift.io/cluster-api-cluster: ${data.local_file.infrastructureID.content}
+  name: ${data.local_file.infrastructureID.content}-worker-${element(var.aws_worker_availability_zones, count.index)}
   namespace: openshift-machine-api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      machine.openshift.io/cluster-api-cluster: ${local.infrastructure_id}
-      machine.openshift.io/cluster-api-machineset: ${local.infrastructure_id}-worker-${element(var.aws_worker_availability_zones, count.index)}
+      machine.openshift.io/cluster-api-cluster: ${data.local_file.infrastructureID.content}
+      machine.openshift.io/cluster-api-machineset: ${data.local_file.infrastructureID.content}-worker-${element(var.aws_worker_availability_zones, count.index)}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        machine.openshift.io/cluster-api-cluster: ${local.infrastructure_id}
+        machine.openshift.io/cluster-api-cluster: ${data.local_file.infrastructureID.content}
         machine.openshift.io/cluster-api-machine-role: worker
         machine.openshift.io/cluster-api-machine-type: worker
-        machine.openshift.io/cluster-api-machineset: ${local.infrastructure_id}-worker-${element(var.aws_worker_availability_zones, count.index)}
+        machine.openshift.io/cluster-api-machineset: ${data.local_file.infrastructureID.content}-worker-${element(var.aws_worker_availability_zones, count.index)}
     spec:
       metadata:
         creationTimestamp: null
@@ -299,7 +299,7 @@ spec:
             name: aws-cloud-credentials
           deviceIndex: 0
           iamInstanceProfile:
-            id: ${local.infrastructure_id}-worker-profile
+            id: ${data.local_file.infrastructureID.content}-worker-profile
           instanceType: ${var.aws_worker_instance_type}
           kind: AWSMachineProviderConfig
           metadata:
@@ -312,14 +312,14 @@ spec:
           - filters:
             - name: tag:Name
               values:
-              - ${local.infrastructure_id}-worker-sg
+              - ${data.local_file.infrastructureID.content}-worker-sg
           subnet:
             filters:
             - name: tag:Name
               values:
-              - ${local.infrastructure_id}-private-${element(var.aws_worker_availability_zones, count.index)}
+              - ${data.local_file.infrastructureID.content}-private-${element(var.aws_worker_availability_zones, count.index)}
           tags:
-          - name: kubernetes.io/cluster/${local.infrastructure_id}
+          - name: kubernetes.io/cluster/${data.local_file.infrastructureID.content}
             value: owned
           userDataSecret:
             name: worker-user-data
@@ -457,7 +457,7 @@ resource "null_resource" "generate_ignition_config" {
 
 resource "null_resource" "extractInfrastructureID" {
   depends_on = [
-    null_resource.generate_ignition_config
+    null_resource.generate_manifests
   ]
 
   provisioner "local-exec" {
