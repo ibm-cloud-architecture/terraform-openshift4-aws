@@ -16,7 +16,7 @@ data "aws_partition" "current" {}
 data "aws_ebs_default_kms_key" "current" {}
 
 resource "aws_s3_bucket" "ignition" {
-  bucket = var.ignition_bucket
+  # bucket = var.ignition_bucket
   acl = "private"
 
   tags = merge(
