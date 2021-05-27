@@ -17,9 +17,9 @@ resource "aws_vpc_endpoint" "private_ec2" {
   subnet_ids =  aws_subnet.private_subnet.*.id
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-ec2-vpce"
-    )
+    tomap({
+      "Name" = "${var.cluster_id}-ec2-vpce"
+    })
   )
 
 }
@@ -44,9 +44,9 @@ resource "aws_vpc_endpoint" "private_ecr" {
   subnet_ids =  aws_subnet.private_subnet.*.id
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-ecr-vpce"
-    )
+    tomap({
+      "Name" = "${var.cluster_id}-ecr-vpce"
+    })
   )
 
 }
@@ -71,9 +71,9 @@ resource "aws_vpc_endpoint" "private_elb" {
   subnet_ids =  aws_subnet.private_subnet.*.id
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-elb-vpce"
-    )
+    tomap({
+      "Name" = "${var.cluster_id}-elb-vpce"
+    })
   )
 
 }
@@ -84,9 +84,9 @@ resource "aws_security_group" "private_ec2_api" {
 
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-private-ec2-api",
-    )
+    tomap({
+      "Name" = "${var.cluster_id}-private-ec2-api",
+    })
   )
 }
 
@@ -97,9 +97,7 @@ resource "aws_security_group_rule" "private_ec2_ingress" {
   from_port   = 0
   to_port     = 65535
   protocol    = "tcp"
-  cidr_blocks = [
-     var.cidr_block
-  ]
+  cidr_blocks = var.cidr_blocks
 
   security_group_id =  aws_security_group.private_ec2_api.id
 }
@@ -124,9 +122,9 @@ resource "aws_security_group" "private_ecr_api" {
 
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-private-ecr-api",
-    )
+    tomap({
+      "Name" = "${var.cluster_id}-private-ecr-api",
+    })
   )
 }
 
@@ -138,9 +136,7 @@ resource "aws_security_group_rule" "private_ecr_ingress" {
   from_port   = 0
   to_port     = 65535
   protocol    = "tcp"
-  cidr_blocks = [
-     var.cidr_block
-  ]
+  cidr_blocks = var.cidr_blocks
 
   security_group_id =  aws_security_group.private_ecr_api[0].id
 }
@@ -166,9 +162,9 @@ resource "aws_security_group" "private_elb_api" {
 
   tags =  merge(
     var.tags,
-    map(
-      "Name",  "${var.cluster_id}-private-elb-api",
-    )
+    tomap({
+      "Name" =  "${var.cluster_id}-private-elb-api",
+    })
   )
 }
 
@@ -180,9 +176,7 @@ resource "aws_security_group_rule" "private_elb_ingress" {
   from_port   = 0
   to_port     = 65535
   protocol    = "tcp"
-  cidr_blocks = [
-     var.cidr_block
-  ]
+  cidr_blocks = var.cidr_blocks
 
   security_group_id =  aws_security_group.private_elb_api[0].id
 }
