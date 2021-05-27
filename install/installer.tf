@@ -462,7 +462,7 @@ resource "null_resource" "extractInfrastructureID" {
 
   provisioner "local-exec" {
     when    = create
-    command = "cat ${path.module}/temp/metadata.json | jq -r .infraID | tr -d '\n' > ${path.module}/infraID"
+    command = "cat ${path.module}/temp/.openshift_install_state.json | jq -r '.\"*installconfig.ClusterID\".InfraID' | tr -d '\n' > ${path.module}/infraID"
   }
 
   provisioner "local-exec" {
