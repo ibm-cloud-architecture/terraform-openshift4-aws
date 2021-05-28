@@ -54,17 +54,19 @@ This project uses mainly Terraform as infrastructure management and installation
       zypper install wget
       ```
 
-4. Get the Terraform code
+5. Install jq: see [https://stedolan.github.io/jq/download/](https://stedolan.github.io/jq/download/)
+
+6. Get the Terraform code
 
    ```bash
    git clone https://github.com/ibm-cloud-architecture/terraform-openshift4-aws.git
    ```
 
-5. Prepare the DNS
+7. Prepare the DNS
 
-   OpenShift requires a valid DNS domain, you can get one from AWS Route53 or using existing domain and registrar. The DNS must be registered as a Public Hosted Zone in Route53. (Even if you plan to use an airgapped environment)
+   OpenShift requires a valid public Route53 hosted zone. (Even if you plan to use an airgapped environment)
 
-6. Prepare AWS Account Access
+8. Prepare AWS Account Access
 
    Please reference the [Required AWS Infrastructure components](https://docs.openshift.com/container-platform/4.6/installing/installing_aws/installing-aws-account.html) to setup your AWS account before installing OpenShift 4.
 
@@ -107,8 +109,8 @@ This project installs the OpenShift 4 in several stages where each stage automat
 2. Deploy the OpenShift 4 cluster using the following modules in the folders:
 
  	- route53: generate a private hosted zone using route 53
-  - vpc: Create the VPC, subnets, security groups and load balancers for the OpenShift cluster
 	- install: Build the installation files, ignition configs and modify YAML files
+  - vpc: Create the VPC, subnets, security groups and load balancers for the OpenShift cluster
 	- iam: define AWS authorities for the masters and workers
 	- bootstrap: main module to provision the bootstrap node and generates OpenShift installation files and resources
 	- master: create master nodes manually (UPI)
