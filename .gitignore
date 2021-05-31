@@ -9,3 +9,6 @@
 *.tfvars
 openshift_pull_secret.json
 .terraform.lock.hcl
+
+# OS X files
+.DS_Store
