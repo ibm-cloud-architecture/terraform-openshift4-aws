@@ -229,6 +229,8 @@ Setting up the mirror repository using AWS ECR:
        --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}
     ```
 
+4. Provide the certificate(s) for the registry in a file and refers that from the vars to be included in the `install-config.yaml`.
+
 Once the mirror registry is created - use the terraform.tfvars similar to below:
 
 ```
@@ -253,10 +255,11 @@ aws_publish_strategy = "Internal"
 airgapped = {
   enabled = true
   repository = "1234567812345678.dkr.ecr.us-east-1.amazonaws.com/ocp435"
+  cabundle = "./cabundle"
 }
 ```
 
-**Note**: To use `airgapped.enabled` of `true` must be done with `aws_publish_strategy` of `Internal` otherwise the deployment will fail.
+**Note**: To use `airgapped.enabled` of `true` must be done with `aws_publish_strategy` of `Internal` otherwise the deployment will fail. Also ECR does not allow for unauthenticated image pulls, additional IAM policies must be defined and attached to the nodes to be able to pull from ECR.
 
 Create your cluster and then associate the private Hosted Zone Record in Route53 with the loadbalancer for the `*.apps.<cluster>.<domain>`.  
 
