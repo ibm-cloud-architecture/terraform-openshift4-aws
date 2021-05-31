@@ -260,21 +260,13 @@ airgapped = {
 
 Create your cluster and then associate the private Hosted Zone Record in Route53 with the loadbalancer for the `*.apps.<cluster>.<domain>`.  
 
-## Removal Procedure
+## Removal procedure
 
-For the removal of the cluster, there are several considerations for removing AWS resources that are created by the cluster directly, but not using Terraform. These resources are unknown to terraform and must be deleted manually from AWS console.
-Some of these resources also hamper the ability to run `terraform destroy` as it becomes a dependent resource that prevent its parent resource to be deleted.
-
-The cluster created resources are:
-
-- Resources that prevents `terraform destroy` to be completed:
-  - Worker EC2 instances
-  - Application Load Balancer (classic load balancer) for the `*.apps.<cluster>.<domain>`
-  - Security Group for the application load balancer
-- Other resources that are not deleted:
-  - S3 resource for image-registry
-  - IAM users for the cluster
-  - Public Route53 Record set associated with the application load balancer
+To delete the cluster - `terraform destroy` can be implemented.
+The following items are not deleted (and may stop destroy from being successful):
+- EBS volumes from the gp2 storage classes
+- Public zone DNS updates
+- Custom compute nodes that are not the initial worker nodes
 
 ## Advanced topics
 
