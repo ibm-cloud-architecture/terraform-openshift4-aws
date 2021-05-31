@@ -149,10 +149,22 @@ variable "aws_skip_region_validation" {
   description = "This decides if the AWS provider should validate if the region is known."
 }
 
+
+variable "aws_access_key_id" {
+  type        = string
+  description = "AWS Key"
+}
+
+variable "aws_secret_access_key" {
+  type        = string
+  description = "AWS Secret"
+}
+
 variable "airgapped" {
   type = map(string)
   default = {
     enabled  = false
     repository = ""
+    cabundle = ""
   }
 }

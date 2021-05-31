@@ -107,5 +107,6 @@ variable "airgapped" {
   default = {
     airgapped  = false
     repository = ""
+    cabundle = ""
   }
 }

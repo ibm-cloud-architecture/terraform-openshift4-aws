@@ -72,6 +72,11 @@ aws_secret_access_key = ${var.aws_secret_access_key}
 EOF
 }
 
+data "local_file" "cabundle" {
+  count = var.airgapped["enabled"] ? 1 : 0
+  filename = "${var.airgapped.cabundle}"
+}
+
 
 data "template_file" "install_config_yaml" {
   template = <<-EOF
@@ -117,6 +122,8 @@ sshKey: '${tls_private_key.installkey.public_key_openssh}'
 - mirrors:
   - ${var.airgapped["repository"]}
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+additionalTrustBundle: | 
+  ${indent(2,data.local_file.cabundle[0].content)}
 %{endif}
 EOF
 }

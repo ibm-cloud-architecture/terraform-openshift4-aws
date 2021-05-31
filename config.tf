@@ -38,16 +38,6 @@ The name of the cluster. It will be suffixed by the base_domain to make cluster_
 EOF
 }
 
-variable "aws_access_key_id" {
-  type        = string
-  description = "AWS Key"
-}
-
-variable "aws_secret_access_key" {
-  type        = string
-  description = "AWS Secret"
-}
-
 variable "openshift_pull_secret" {
   type = string
   description = "File containing pull secret - get it from https://cloud.redhat.com/openshift/install/pull-secret"
