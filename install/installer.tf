@@ -80,7 +80,17 @@ baseDomain: ${var.domain}
 compute:
 - hyperthreading: Enabled
   name: worker
-  replicas: 1
+  replicas: 3
+  platform:
+    aws:
+      rootVolume:
+        iops: ${var.aws_worker_root_volume_iops}
+        size: ${var.aws_worker_root_volume_size}
+        type: ${var.aws_worker_root_volume_type}
+      type: ${var.aws_worker_instance_type}
+      zones:
+      %{ for zone in var.aws_worker_availability_zones}
+      - ${zone}%{ endfor }
 controlPlane:
   hyperthreading: Enabled
   name: master
@@ -161,277 +171,16 @@ resource "null_resource" "manifest_cleanup_control_plane_machineset" {
   }
 }
 
-# rewrite the domains and the infrastructure id we use in the cluster
-resource "local_file" "cluster_infrastructure_config" {
-  depends_on = [
-    null_resource.generate_manifests
-  ]
-  file_permission = "0644"
-  filename        =  "${path.module}/temp/manifests/cluster-infrastructure-02-config.yml"
-
-  content = <<EOF
-apiVersion: config.openshift.io/v1
-kind: Infrastructure
-metadata:
-  creationTimestamp: null
-  name: cluster
-spec:
-  cloudConfig:
-    name: ""
-status:
-  apiServerInternalURI: https://api-int.${var.clustername}.${var.domain}:6443
-  apiServerURL: https://api.${var.clustername}.${var.domain}:6443
-  etcdDiscoveryDomain: ${var.clustername}.${var.domain}
-  infrastructureName: ${data.local_file.infrastructureID.content}
-  platform: AWS
-  platformStatus:
-    aws:
-      region: ${var.aws_region}
-    type: AWS
-EOF
-}
-# modify manifests/cluster-dns-02-config.yml
-resource "null_resource" "manifest_cleanup_dns_config" {
-  depends_on = [
-    null_resource.generate_manifests
-  ]
-
-  triggers = {
-    install_config =  data.template_file.install_config_yaml.rendered
-    local_file     =  local_file.install_config.id
-  }
-
-  provisioner "local-exec" {
-    command = "rm -f ${path.module}/temp/manifests/cluster-dns-02-config.yml"
-  }
-}
-
-#redo the dns config
-resource "local_file" "dns_config" {
-  count = var.airgapped.enabled ? 0 : 1
-  depends_on = [
-    null_resource.manifest_cleanup_dns_config
-  ]
-
-  file_permission = "0644"
-  filename        = "${path.module}/temp/manifests/cluster-dns-02-config.yml"
-  content         = <<EOF
-apiVersion: config.openshift.io/v1
-kind: DNS
-metadata:
-  creationTimestamp: null
-  name: cluster
-spec:
-  baseDomain: ${var.clustername}.${var.domain}
-  privateZone:
-      tags:
-        Name: ${data.local_file.infrastructureID.content}-int
-        kubernetes.io/cluster/${data.local_file.infrastructureID.content}: owned
-  publicZone:
-    id: ${var.dns_public_id}
-status: {}
-EOF
-}
-
-# remove these machinesets, we will rewrite them using the security group and subnets that we created
-resource "null_resource" "manifest_cleanup_worker_machineset" {
-  depends_on = [
-    null_resource.generate_manifests
-  ]
-
-  triggers = {
-    install_config =  data.template_file.install_config_yaml.rendered
-    local_file     =  local_file.install_config.id
-  }
-
-  provisioner "local-exec" {
-    command = "rm -f ${path.module}/temp/openshift/99_openshift-cluster-api_worker-machines*.yaml"
-  }
-}
-
-#redo the worker machineset
-resource "local_file" "worker_machineset" {
-  count           = length(var.aws_worker_availability_zones)
-
-  depends_on = [
-    null_resource.manifest_cleanup_worker_machineset
-  ]
-
-  file_permission = "0644"
-  filename        = "${path.module}/temp/openshift/99_openshift-cluster-api_worker-machineset-${count.index}.yaml"
-  content         = <<EOF
-apiVersion: machine.openshift.io/v1beta1
-kind: MachineSet
-metadata:
-  creationTimestamp: null
-  labels:
-    machine.openshift.io/cluster-api-cluster: ${data.local_file.infrastructureID.content}
-  name: ${data.local_file.infrastructureID.content}-worker-${element(var.aws_worker_availability_zones, count.index)}
-  namespace: openshift-machine-api
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      machine.openshift.io/cluster-api-cluster: ${data.local_file.infrastructureID.content}
-      machine.openshift.io/cluster-api-machineset: ${data.local_file.infrastructureID.content}-worker-${element(var.aws_worker_availability_zones, count.index)}
-  template:
-    metadata:
-      creationTimestamp: null
-      labels:
-        machine.openshift.io/cluster-api-cluster: ${data.local_file.infrastructureID.content}
-        machine.openshift.io/cluster-api-machine-role: worker
-        machine.openshift.io/cluster-api-machine-type: worker
-        machine.openshift.io/cluster-api-machineset: ${data.local_file.infrastructureID.content}-worker-${element(var.aws_worker_availability_zones, count.index)}
-    spec:
-      metadata:
-        creationTimestamp: null
-      providerSpec:
-        value:
-          ami:
-            id: ${var.ami}
-          apiVersion: awsproviderconfig.openshift.io/v1beta1
-          blockDevices:
-          - ebs:
-              iops: ${var.aws_worker_root_volume_iops}
-              volumeSize: ${var.aws_worker_root_volume_size}
-              volumeType: ${var.aws_worker_root_volume_type}
-          credentialsSecret:
-            name: aws-cloud-credentials
-          deviceIndex: 0
-          iamInstanceProfile:
-            id: ${data.local_file.infrastructureID.content}-worker-profile
-          instanceType: ${var.aws_worker_instance_type}
-          kind: AWSMachineProviderConfig
-          metadata:
-            creationTimestamp: null
-          placement:
-            availabilityZone: ${element(var.aws_worker_availability_zones, count.index)}
-            region: ${var.aws_region}
-          publicIp: null
-          securityGroups:
-          - filters:
-            - name: tag:Name
-              values:
-              - ${data.local_file.infrastructureID.content}-worker-sg
-          subnet:
-            filters:
-            - name: tag:Name
-              values:
-              - ${data.local_file.infrastructureID.content}-private-${element(var.aws_worker_availability_zones, count.index)}
-          tags:
-          - name: kubernetes.io/cluster/${data.local_file.infrastructureID.content}
-            value: owned
-          userDataSecret:
-            name: worker-user-data
-EOF
-}
-
-#redo the worker machineset
-resource "local_file" "ingresscontroller" {
-  count           = var.airgapped.enabled ? 1 : 0
-
-  depends_on = [
-    null_resource.generate_manifests
-  ]
-  file_permission = "0644"
-  filename = "${path.module}/temp/openshift/99_default_ingress_controller.yml"
-  content = <<EOF
-apiVersion: operator.openshift.io/v1
-kind: IngressController
-metadata:
-  name: default
-  namespace: openshift-ingress-operator
-spec:
-  replicas: 2
-  endpointPublishingStrategy:
-    type: Private
-EOF
-}
-
-resource "local_file" "awssecrets1" {
-  count           = var.airgapped.enabled ? 1 : 0
-
-  depends_on = [
-    null_resource.generate_manifests
-  ]
-  file_permission = "0644"
-  filename        =  "${path.module}/temp/openshift/99_awssecrets_image_registry.yml"
-
-  content = <<EOF
-apiVersion: v1
-data:
-  aws_access_key_id: ${base64encode(var.aws_access_key_id)}
-  aws_secret_access_key: ${base64encode(var.aws_secret_access_key)}
-kind: Secret
-metadata:
-  name: installer-cloud-credentials
-  namespace: openshift-image-registry
-type: Opaque
-EOF
-}
-
-resource "local_file" "awssecrets2" {
-  count           = var.airgapped.enabled ? 1 : 0
-
-  depends_on = [
-    null_resource.generate_manifests
-  ]
-  file_permission = "0644"
-  filename        =  "${path.module}/temp/openshift/99_awssecrets_ingress.yml"
-
-  content = <<EOF
-apiVersion: v1
-data:
-  aws_access_key_id: ${base64encode(var.aws_access_key_id)}
-  aws_secret_access_key: ${base64encode(var.aws_secret_access_key)}
-kind: Secret
-metadata:
-  name: cloud-credentials
-  namespace: openshift-ingress-operator
-type: Opaque
-EOF
-}
-
-resource "local_file" "awssecrets3" {
-  count           = var.airgapped.enabled ? 1 : 0
-
-  depends_on = [
-    null_resource.generate_manifests
-  ]
-  file_permission = "0644"
-  filename        =  "${path.module}/temp/openshift/99_awssecrets_machine_api.yml"
-
-  content = <<EOF
-apiVersion: v1
-data:
-  aws_access_key_id: ${base64encode(var.aws_access_key_id)}
-  aws_secret_access_key: ${base64encode(var.aws_secret_access_key)}
-kind: Secret
-metadata:
-  name: aws-cloud-credentials
-  namespace: openshift-machine-api
-type: Opaque
-EOF
-}
-
 # build the bootstrap ignition config
 resource "null_resource" "generate_ignition_config" {
   depends_on = [
     null_resource.manifest_cleanup_control_plane_machineset,
-    local_file.worker_machineset,
-    local_file.dns_config,
-    local_file.ingresscontroller,
-    local_file.awssecrets1,
-    local_file.awssecrets2,
-    local_file.awssecrets3,
     local_file.airgapped_registry_upgrades,
-    local_file.cluster_infrastructure_config,
   ]
 
   triggers = {
     install_config                   =  data.template_file.install_config_yaml.rendered
     local_file_install_config        =  local_file.install_config.id
-    local_file_infrastructure_config =  local_file.cluster_infrastructure_config.id
   }
 
   provisioner "local-exec" {
@@ -480,7 +229,23 @@ data "local_file" "infrastructureID" {
 
 }
 
+resource "null_resource" "delete_aws_resources" {
+  depends_on = [
+    null_resource.cleanup
+  ]
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "${path.module}/aws_cleanup.sh"
+  }
+
+}
+
 resource "null_resource" "cleanup" {
+  depends_on = [
+    null_resource.generate_ignition_config
+  ]
+
   provisioner "local-exec" {
     when    = destroy
     command = "rm -rf ${path.module}/temp"
@@ -524,14 +289,6 @@ data "local_file" "worker_ign" {
   ]
 
   filename =  "${path.module}/temp/worker.ign"
-}
-
-data "local_file" "cluster_infrastructure" {
-  depends_on = [
-    null_resource.generate_manifests
-  ]
-
-  filename =  "${path.module}/temp/manifests/cluster-infrastructure-02-config.yml"
 }
 
 resource "null_resource" "get_auth_config" {
