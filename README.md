@@ -1,10 +1,6 @@
 # Automated OpenShift v4 installation on AWS
 
----
-**Important**: use branch ocp46 to install OpenShift version 4.6.x or later
----
-
-This project automates the Red Hat OpenShift Container Platform 4.x installation on Amazon AWS platform. It focuses on the OpenShift User-provided infrastructure installation (UPI) where implementers provide pre-existing infrastructure including VMs, networking, load balancers, DNS configuration etc.
+This project automates the Red Hat OpenShift Container Platform 4.6 (for previous releases - checkout `pre46` branch) installation on Amazon AWS platform. It focuses on the OpenShift User-provided infrastructure installation (UPI) where implementers provide pre-existing infrastructure including VMs, networking, load balancers, DNS configuration etc.
 
 * [Terraform Automation](#terraform-automation)
 * [Infrastructure Architecture](#infrastructure-architecture)
@@ -19,7 +15,7 @@ This project uses mainly Terraform as infrastructure management and installation
 
 ### Prerequisites
 
-1. To use Terraform automation, download the Terraform binaries [here](https://www.terraform.io/). The code here supports Terraform 0.12 - 0.12.13; there are warning messages to run this on 0.12.14 and later.
+1. To use Terraform automation, download the Terraform binaries [here](https://www.terraform.io/). The code here supports Terraform 0.15 or later.
 
    On MacOS, you can acquire it using [homebrew](brew.sh) using this command:
 
@@ -58,19 +54,21 @@ This project uses mainly Terraform as infrastructure management and installation
       zypper install wget
       ```
 
-4. Get the Terraform code
+5. Install jq: see [https://stedolan.github.io/jq/download/](https://stedolan.github.io/jq/download/)
+
+6. Get the Terraform code
 
    ```bash
    git clone https://github.com/ibm-cloud-architecture/terraform-openshift4-aws.git
    ```
 
-5. Prepare the DNS
+7. Prepare the DNS
 
-   OpenShift requires a valid DNS domain, you can get one from AWS Route53 or using existing domain and registrar. The DNS must be registered as a Public Hosted Zone in Route53. (Even if you plan to use an airgapped environment)
+   OpenShift requires a valid public Route53 hosted zone. (Even if you plan to use an airgapped environment)
 
-6. Prepare AWS Account Access
+8. Prepare AWS Account Access
 
-   Please reference the [Required AWS Infrastructure components](https://docs.openshift.com/container-platform/4.1/installing/installing_aws_user_infra/installing-aws-user-infra.html#installation-aws-user-infra-requirements_installing-aws-user-infra) to setup your AWS account before installing OpenShift 4.
+   Please reference the [Required AWS Infrastructure components](https://docs.openshift.com/container-platform/4.6/installing/installing_aws/installing-aws-account.html) to setup your AWS account before installing OpenShift 4.
 
    We suggest to create an AWS IAM user dedicated for OpenShift installation with permissions documented above.
    On the bastion host, configure your AWS user credential as environment variables:
@@ -85,8 +83,7 @@ This project uses mainly Terraform as infrastructure management and installation
 
 For detail on OpenShift UPI, please reference the following:
 
-* [https://docs.openshift.com/container-platform/4.1/installing/installing_aws_user_infra/installing-aws-user-infra.html](https://docs.openshift.com/container-platform/4.1/installing/installing_aws_user_infra/installing-aws-user-infra.html)
-* [https://github.com/openshift/installer/blob/master/docs/user/aws/install_upi.md](https://github.com/openshift/installer/blob/master/docs/user/aws/install_upi.md)
+* [https://docs.openshift.com/container-platform/4.6/installing/installing_aws/installing-aws-customizations.html](https://docs.openshift.com/container-platform/4.6/installing/installing_aws/installing-aws-customizations.html)
 
 The terraform code in this repository supports 3 installation modes:
 
@@ -105,14 +102,15 @@ This project installs the OpenShift 4 in several stages where each stage automat
 1. The deployment assumes that you run the terraform deployment from a Linux based environment. This can be performed on an AWS-linux EC2 instance. The deployment machine has the following requirements:
 
     - git cli
-    - terraform 0.12 or later
+    - terraform 0.15 or later
     - wget command
+    - jq command
 
 2. Deploy the OpenShift 4 cluster using the following modules in the folders:
 
  	- route53: generate a private hosted zone using route 53
-  - vpc: Create the VPC, subnets, security groups and load balancers for the OpenShift cluster
 	- install: Build the installation files, ignition configs and modify YAML files
+  - vpc: Create the VPC, subnets, security groups and load balancers for the OpenShift cluster
 	- iam: define AWS authorities for the masters and workers
 	- bootstrap: main module to provision the bootstrap node and generates OpenShift installation files and resources
 	- master: create master nodes manually (UPI)
@@ -122,17 +120,15 @@ This project installs the OpenShift 4 in several stages where each stage automat
 	Create a `terraform.tfvars` file with following content:
 
 ```
-cluster_id = "ocp4-9n2nn"
-clustername = "ocp4"
+cluster_name = "ocp4"
 base_domain = "example.com"
 openshift_pull_secret = "./openshift_pull_secret.json"
-openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.6.28"
 
 aws_access_key_id = "AAAA"
 aws_secret_access_key = "AbcDefGhiJkl"
 aws_ami = "ami-06f85a7940faa3217"
 aws_extra_tags = {
-  "kubernetes.io/cluster/ocp4-9n2nn" = "owned",
   "owner" = "admin"
   }
 aws_azs = [
@@ -146,14 +142,13 @@ aws_publish_strategy = "External"
 
 |name | required  | description and value        |
 |----------------|------------|--------------|
-| `cluster_id` | yes | This id will be prefixed to all the AWS infrastructure resources provisioned with the script - typically using the clustername as its prefix.  |
-| `clustername`     | yes  | The name of the OpenShift cluster you will install     |
+| `cluster_name`     | yes  | The name of the OpenShift cluster you will install     |
 | `base_domain` | yes | The domain that has been created in Route53 public hosted zone |
-| `openshift_pull_secret` | no | The value refers to a file name that contain downloaded pull secret from https://cloud.redhat.com/openshift/install; the default name is `openshift_pull_secret.json` |
+| `openshift_pull_secret` | no | The value refers to a file name that contain downloaded pull secret from https://cloud.redhat.com/openshift/pull-secret; the default name is `openshift_pull_secret.json` |
 | `openshift_installer_url` | no | The URL to the download site for Red Hat OpenShift installation and client codes.  |
 | `aws_region`   | yes  | AWS region that the VPC will be created in.  By default, uses `us-east-2`.  Note that for an HA installation, the AWS selected region should have at least 3 availability zones. |
 | `aws_extra_tags`  | no  | AWS tag to identify a resource for example owner:myname     |
-| `aws_ami` | yes | Red Hat CoreOS ami for your region (see [here](https://docs.openshift.com/container-platform/4.2/installing/installing_aws_user_infra/installing-aws-user-infra.html#installation-aws-user-infra-rhcos-ami_installing-aws-user-infra)). Other platforms images information can be found [here](https://github.com/openshift/installer/blob/master/data/data/rhcos.json) |
+| `aws_ami` | yes | Red Hat CoreOS ami for your region (see [here](https://docs.openshift.com/container-platform/4.6/installing/installing_aws/installing-aws-user-infra.html#installation-aws-user-infra-rhcos-ami_installing-aws-user-infra)). Other platforms images information can be found [here](https://github.com/openshift/installer/blob/master/data/data/rhcos.json) |
 | `aws_secret_access_key` | yes | adding aws_secret_access_key to the cluster |
 | `aws_access_key_id` | yes | adding aws_access_key_id to the cluster |
 | `aws_azs` | yes | list of availability zones to deploy VMs |
@@ -221,9 +216,9 @@ Setting up the mirror repository using AWS ECR:
 3. Mirror quay.io and other OpenShift source into your repository
 
     ```
-    export OCP_RELEASE="4.3.5-x86_64"
+    export OCP_RELEASE="4.6.28-x86_64"
     export LOCAL_REGISTRY='1234567812345678.dkr.ecr.us-east-1.amazonaws.com'
-    export LOCAL_REPOSITORY='ocp435'
+    export LOCAL_REPOSITORY='ocp46'
     export PRODUCT_REPO='openshift-release-dev'
     export LOCAL_SECRET_JSON='/home/ec2-user/openshift_pull_secret.json'
     export RELEASE_NAME="ocp-release"
@@ -234,20 +229,20 @@ Setting up the mirror repository using AWS ECR:
        --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}
     ```
 
+4. Provide the certificate(s) for the registry in a file and refers that from the vars to be included in the `install-config.yaml`.
+
 Once the mirror registry is created - use the terraform.tfvars similar to below:
 
 ```
-cluster_id = "ocp4-9n2nn"
-clustername = "ocp4"
+cluster_name = "ocp4"
 base_domain = "example.com"
 openshift_pull_secret = "./openshift_pull_secret.json"
-openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.6.28"
 
 aws_access_key_id = "AAAA"
 aws_secret_access_key = "AbcDefGhiJkl"
 aws_ami = "ami-06f85a7940faa3217"
 aws_extra_tags = {
-  "kubernetes.io/cluster/ocp4-9n2nn" = "owned",
   "owner" = "admin"
   }
 aws_azs = [
@@ -260,31 +255,21 @@ aws_publish_strategy = "Internal"
 airgapped = {
   enabled = true
   repository = "1234567812345678.dkr.ecr.us-east-1.amazonaws.com/ocp435"
+  cabundle = "./cabundle"
 }
 ```
 
-**Note**: To use `airgapped.enabled` of `true` must be done with `aws_publish_strategy` of `Internal` otherwise the deployment will fail.
+**Note**: To use `airgapped.enabled` of `true` must be done with `aws_publish_strategy` of `Internal` otherwise the deployment will fail. Also ECR does not allow for unauthenticated image pulls, additional IAM policies must be defined and attached to the nodes to be able to pull from ECR.
 
 Create your cluster and then associate the private Hosted Zone Record in Route53 with the loadbalancer for the `*.apps.<cluster>.<domain>`.  
 
-## Removal Procedure
+## Removal procedure
 
-For the removal of the cluster, there are several considerations for removing AWS resources that are created by the cluster directly, but not using Terraform. These resources are unknown to terraform and must be deleted manually from AWS console.
-Some of these resources also hamper the ability to run `terraform destroy` as it becomes a dependent resource that prevent its parent resource to be deleted.
-
-The cluster created resources are:
-
-- Resources that prevents `terraform destroy` to be completed:
-  - Worker EC2 instances
-  - Application Load Balancer (classic load balancer) for the `*.apps.<cluster>.<domain>`
-  - Security Group for the application load balancer
-- Other resources that are not deleted:
-  - S3 resource for image-registry
-  - IAM users for the cluster
-  - Public Route53 Record set associated with the application load balancer
-
-
-**Update 11/2020**: A `delocp.sh` is added to remove resources - if you have the aws CLI; however the script does not account for timing just yet.
+To delete the cluster - `terraform destroy` can be implemented.
+The following items are not deleted (and may stop destroy from being successful):
+- EBS volumes from the gp2 storage classes
+- Public zone DNS updates
+- Custom compute nodes that are not the initial worker nodes
 
 ## Advanced topics
 

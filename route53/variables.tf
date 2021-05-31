@@ -3,17 +3,6 @@ variable "cluster_domain" {
   type        = string
 }
 
-variable "etcd_count" {
-  description = "The number of etcd members."
-  type        = string
-}
-
-variable "etcd_ip_addresses" {
-  description = "List of string IPs for machines running etcd members."
-  type        = list(string)
-  default     = []
-}
-
 variable "base_domain" {
   description = "The base domain used for public records."
   type        = string
@@ -63,4 +52,9 @@ Because of the issue https://github.com/hashicorp/terraform/issues/12570, the co
 based on if api_external_lb_dns_name for example, which will be null when there is no external lb for API.
 So publish_strategy serves an coordinated proxy for that decision.
 EOF
+}
+
+variable "region" {
+  type = string
+  description = "The target AWS region for the cluster."
 }
