@@ -1,8 +1,3 @@
-variable "infrastructure_id" {
-  type        = string
-  description = "The identifier for infra resources."
-}
-
 variable "clustername" {
   type        = string
   description = "The identifier for the cluster."
@@ -112,5 +107,6 @@ variable "airgapped" {
   default = {
     airgapped  = false
     repository = ""
+    cabundle = ""
   }
 }
