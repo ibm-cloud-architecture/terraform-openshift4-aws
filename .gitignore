@@ -11,3 +11,6 @@ openshift_pull_secret.json
 .terraform.lock.hcl
 *.pem
 installer-files/**
+
+# OS X files
+.DS_Store
