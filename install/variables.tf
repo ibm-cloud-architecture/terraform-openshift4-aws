@@ -58,12 +58,44 @@ EOF
 
 }
 
-
 variable "master_count" {
   type        = number
   description = "The number of master nodes."
   default     = 3
 }
+
+variable "infra_count" {
+  type        = number
+  description = "The number of infra nodes."
+  default     = 0
+}
+
+variable "aws_infra_instance_type" {
+  type = string
+  description = "Instance type for the infra node(s). Example: `m4.large`."
+  default = "m5.xlarge"
+}
+
+variable "aws_infra_root_volume_type" {
+  type        = string
+  description = "The type of volume for the root block device of infra nodes."
+}
+
+variable "aws_infra_root_volume_size" {
+  type        = string
+  description = "The size of the volume in gigabytes for the root block device of infra nodes."
+}
+
+variable "aws_infra_root_volume_iops" {
+  type = string
+
+  description = <<EOF
+The amount of provisioned IOPS for the root block device of infra nodes.
+Ignored if the volume type is not io1.
+EOF
+
+}
+
 
 variable "openshift_pull_secret" {
   type        = string
@@ -76,15 +108,15 @@ variable "openshift_installer_url" {
   default     = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
 }
 
-variable "aws_access_key_id" {
-  type        = string
-  description = "AWS access key"
-}
+# variable "aws_access_key_id" {
+#   type        = string
+#   description = "AWS access key"
+# }
 
-variable "aws_secret_access_key" {
-  type        = string
-  description = "AWS Secret"
-}
+# variable "aws_secret_access_key" {
+#   type        = string
+#   description = "AWS Secret"
+# }
 
 variable "aws_region" {
   type        = string
@@ -97,9 +129,9 @@ variable "aws_worker_availability_zones" {
   description = "The availability zones to provision for workers.  Worker instances are created by the machine-API operator, but this variable controls their supporting infrastructure (subnets, routing, etc.)."
 }
 
-variable "dns_public_id" {
-  type = string
-  description = "public route53 id"
+variable "aws_private_subnets" {
+  type = list(string)
+  description = "The private subnets for workers. This is used when the subnets are preconfigured."
 }
 
 variable "airgapped" {
@@ -107,6 +139,25 @@ variable "airgapped" {
   default = {
     airgapped  = false
     repository = ""
-    cabundle = ""
+  }
+}
+
+variable "openshift_ssh_key" {
+  type    = string
+  default = ""
+}
+
+variable "openshift_additional_trust_bundle" {
+  type = string
+}
+
+variable "byo_dns" {
+  type = bool
+}
+
+variable "proxy_config" {
+  type = map(string)
+  default = {
+    enabled = false
   }
 }
