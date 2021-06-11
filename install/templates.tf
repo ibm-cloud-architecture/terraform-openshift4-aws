@@ -70,6 +70,10 @@ sshKey: '${local.public_ssh_key}'
 - mirrors:
   - ${var.airgapped["repository"]}
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev%{endif}
+%{if var.proxy_config["enabled"]}proxy:
+  httpProxy: ${var.proxy_config["httpProxy"]}
+  httpsProxy: ${var.proxy_config["httpsProxy"]}
+  noProxy: ${var.proxy_config["noProxy"]}%{endif}
 %{if var.openshift_additional_trust_bundle != ""}additionalTrustBundle: | 
   ${indent(2,data.local_file.cabundle[0].content)}%{endif}
 EOF

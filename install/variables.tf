@@ -154,3 +154,10 @@ variable "openshift_additional_trust_bundle" {
 variable "byo_dns" {
   type = bool
 }
+
+variable "proxy_config" {
+  type = map(string)
+  default = {
+    enabled = false
+  }
+}
