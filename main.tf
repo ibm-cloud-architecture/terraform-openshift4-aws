@@ -136,6 +136,7 @@ module "installer" {
   aws_infra_instance_type = var.aws_infra_instance_type
   aws_private_subnets = var.aws_private_subnets
   airgapped = var.airgapped
+  proxy_config = var.proxy_config
   openshift_ssh_key  = var.openshift_ssh_key 
   openshift_additional_trust_bundle = var.openshift_additional_trust_bundle
   byo_dns = var.openshift_byo_dns
