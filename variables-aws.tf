@@ -16,19 +16,25 @@ variable "aws_bootstrap_instance_type" {
 variable "aws_master_instance_type" {
   type        = string
   description = "Instance type for the master node(s). Default: `m4.xlarge`."
-  default     = "m4.xlarge"
+  default     = "m5.xlarge"
 }
 
 variable "aws_worker_instance_type" {
   type        = string
   description = "Instance type for the worker node(s). Default: `m4.2xlarge`."
-  default     = "m4.2xlarge"
+  default     = "m5.2xlarge"
 }
 
-variable "aws_ami" {
+variable "aws_infra_instance_type" {
   type        = string
-  description = "AMI for all nodes.  An encrypted copy of this AMI will be used.  Example: `ami-foobar123`."
+  description = "Instance type for the worker node(s). Default: `m4.2xlarge`."
+  default     = "m5.xlarge"
 }
+
+# variable "aws_ami" {
+#   type        = string
+#   description = "AMI for all nodes.  An encrypted copy of this AMI will be used.  Example: `ami-foobar123`."
+# }
 
 variable "aws_extra_tags" {
   type = map(string)
@@ -88,6 +94,34 @@ EOF
 
 }
 
+variable "infra_count" {
+  type    = string
+  default = 0
+}
+
+variable "aws_infra_root_volume_type" {
+  type        = string
+  description = "The type of volume for the root block device of infra nodes."
+  default = "gp2"
+}
+
+variable "aws_infra_root_volume_size" {
+  type        = string
+  description = "The size of the volume in gigabytes for the root block device of infra nodes."
+  default = 200
+}
+
+variable "aws_infra_root_volume_iops" {
+  type = string
+
+  description = <<EOF
+The amount of provisioned IOPS for the root block device of infra nodes.
+Ignored if the volume type is not io1.
+EOF
+  default = 0
+
+}
+
 variable "aws_master_root_volume_encrypted" {
   type = bool
   default = true
@@ -115,8 +149,9 @@ variable "aws_region" {
 }
 
 variable "aws_azs" {
-  type = list(string)
-  description = "The availability zones in which to create the nodes."
+ type = list(string)
+ description = "The availability zones in which to create the nodes."
+ default = null
 }
 
 variable "aws_vpc" {
@@ -149,22 +184,12 @@ variable "aws_skip_region_validation" {
   description = "This decides if the AWS provider should validate if the region is known."
 }
 
+# variable "aws_access_key_id" {
+#   type        = string
+#   description = "AWS Key"
+# }
 
-variable "aws_access_key_id" {
-  type        = string
-  description = "AWS Key"
-}
-
-variable "aws_secret_access_key" {
-  type        = string
-  description = "AWS Secret"
-}
-
-variable "airgapped" {
-  type = map(string)
-  default = {
-    enabled  = false
-    repository = ""
-    cabundle = ""
-  }
-}
+# variable "aws_secret_access_key" {
+#   type        = string
+#   description = "AWS Secret"
+# }

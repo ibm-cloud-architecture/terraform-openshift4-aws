@@ -1,10 +1,10 @@
 #!/bin/bash
 
-path=$(dirname $0)
-clusterId=$(cat $path/infraID)
+path=$(dirname $0) 
+clusterId=$(cat $path/../installer-files/infraID)
 
 if [ -z "$clusterId" ]; then
-  exit 99
+  exit 
 fi
 
 if [ -z "$AWS_ACCESS_KEY_ID" ]; then
@@ -13,6 +13,10 @@ fi
 if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
   exit 80
 fi
+if [ -z "$AWS_DEFAULT_REGION" ]; then
+  exit 80
+fi
+
 
 echo "0 - Start processing for cluster $clusterId - waiting for masters to be destroyed"
 masters=3
@@ -24,7 +28,6 @@ while [ $masters -gt 0 ]; do
     sleep 10
   fi
 done
-
 workers=$(echo "$nodes" | cut -d$'\t' -f1)
 
 echo "1 - Deleting workers - $workers -"
