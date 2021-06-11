@@ -1,18 +1,10 @@
 cluster_name = "ocp4"
 base_domain = "example.com"
 openshift_pull_secret = "./openshift_pull_secret.json"
-openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.6.28"
+openshift_version = "4.6.28"
 
-aws_access_key_id = "AAAA"
-aws_secret_access_key = "AbcDefGhiJkl"
-aws_ami = "ami-06f85a7940faa3217"
 aws_extra_tags = {
   "owner" = "admin"
   }
-aws_azs = [
-  "us-east-1a",
-  "us-east-1b",
-  "us-east-1c"
-  ]
 aws_region = "us-east-1"
 aws_publish_strategy = "External"

@@ -43,7 +43,56 @@ variable "openshift_pull_secret" {
   description = "File containing pull secret - get it from https://cloud.redhat.com/openshift/install/pull-secret"
 }
 
-variable "openshift_installer_url" {
-  type = string
-  description = "URL of the appropriate OpenShift installer under https://mirror.openshift.com/pub/openshift-v4/clients/ocp/"
+variable "use_ipv4" {
+  type    = bool
+  default = true
+  description = "not implemented"
+}
+
+variable "use_ipv6" {
+  type    = bool
+  default = false
+  description = "not implemented"
+}
+
+variable "openshift_version" {
+  type    = string
+  default = "4.6.28"
+}
+
+variable "airgapped" {
+  type = map(string)
+  default = {
+    enabled  = false
+    repository = ""
+  }
+}
+
+variable "proxy_config" {
+  type = map(string)
+  description = "Not implemented"
+  default = {
+    enabled    = false
+    httpProxy  = "http://user:password@ip:port"
+    httpsProxy = "http://user:password@ip:port"
+    noProxy    = "ip1,ip2,ip3,.example.com,cidr/mask"
+  }
+}
+
+variable "openshift_additional_trust_bundle" {
+  description = "path to a file with all your additional ca certificates"
+  type        = string
+  default     = ""
+}
+
+variable "openshift_ssh_key" {
+  description = "Path to SSH Public Key file to use for OpenShift Installation"
+  type        = string
+  default     = ""
+}
+
+variable "openshift_byo_dns" {
+  description = "Do not deploy any public or private DNS zone into Azure"
+  type        = bool
+  default     = false
 }
