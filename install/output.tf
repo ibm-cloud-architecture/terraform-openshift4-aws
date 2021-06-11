@@ -14,13 +14,13 @@ output "worker_ign_64" {
     value =  base64encode(data.local_file.worker_ign.content)
 }
 
-output "private_ssh_key" {
-    value =  tls_private_key.installkey.private_key_pem
-}
+# output "private_ssh_key" {
+#     value =  tls_private_key.installkey.private_key_pem
+# }
 
-output "public_ssh_key" {
-    value =  tls_private_key.installkey.public_key_openssh
-}
+# output "public_ssh_key" {
+#     value =  tls_private_key.installkey.public_key_openssh
+# }
 
 output "infraID" {
     value =  data.local_file.infrastructureID.content

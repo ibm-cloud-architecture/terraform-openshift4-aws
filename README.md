@@ -30,17 +30,6 @@ This project uses mainly Terraform as infrastructure management and installation
    git --version
    ```
 
-3. Install OpenShift command line `oc` cli:
-
-   ```bash
-   wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux-4.x.xx.tar.gz
-   tar -xvf openshift-client-linux-4.x.xx.tar.gz
-   chmod u+x oc kubectl
-   sudo mv oc /usr/local/bin
-   sudo mv kubectl /usr/local/bin
-   oc version
-   ```
-
 4. Install wget command:
 
     - MacOS:
@@ -53,8 +42,6 @@ This project uses mainly Terraform as infrastructure management and installation
       yum install wget
       zypper install wget
       ```
-
-5. Install jq: see [https://stedolan.github.io/jq/download/](https://stedolan.github.io/jq/download/)
 
 6. Get the Terraform code
 
@@ -123,37 +110,33 @@ This project installs the OpenShift 4 in several stages where each stage automat
 cluster_name = "ocp4"
 base_domain = "example.com"
 openshift_pull_secret = "./openshift_pull_secret.json"
-openshift_installer_url = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.6.28"
+openshift_version = "4.6.28"
 
-aws_access_key_id = "AAAA"
-aws_secret_access_key = "AbcDefGhiJkl"
-aws_ami = "ami-06f85a7940faa3217"
 aws_extra_tags = {
   "owner" = "admin"
   }
-aws_azs = [
-  "us-east-1a",
-  "us-east-1b",
-  "us-east-1c"
-  ]
 aws_region = "us-east-1"
 aws_publish_strategy = "External"
 ```
 
 |name | required  | description and value        |
 |----------------|------------|--------------|
-| `cluster_name`     | yes  | The name of the OpenShift cluster you will install     |
-| `base_domain` | yes | The domain that has been created in Route53 public hosted zone |
+| `cluster_name` | yes  | The name of the OpenShift cluster you will install     |
+| `base_domain`  | yes | The domain that has been created in Route53 public hosted zone |
 | `openshift_pull_secret` | no | The value refers to a file name that contain downloaded pull secret from https://cloud.redhat.com/openshift/pull-secret; the default name is `openshift_pull_secret.json` |
-| `openshift_installer_url` | no | The URL to the download site for Red Hat OpenShift installation and client codes.  |
+| `openshift_version` | yes | The openshift version to be installed.  |
 | `aws_region`   | yes  | AWS region that the VPC will be created in.  By default, uses `us-east-2`.  Note that for an HA installation, the AWS selected region should have at least 3 availability zones. |
 | `aws_extra_tags`  | no  | AWS tag to identify a resource for example owner:myname     |
-| `aws_ami` | yes | Red Hat CoreOS ami for your region (see [here](https://docs.openshift.com/container-platform/4.6/installing/installing_aws/installing-aws-user-infra.html#installation-aws-user-infra-rhcos-ami_installing-aws-user-infra)). Other platforms images information can be found [here](https://github.com/openshift/installer/blob/master/data/data/rhcos.json) |
-| `aws_secret_access_key` | yes | adding aws_secret_access_key to the cluster |
-| `aws_access_key_id` | yes | adding aws_access_key_id to the cluster |
-| `aws_azs` | yes | list of availability zones to deploy VMs |
+| `aws_azs` | no | list of availability zones to deploy VMs - default to the [`a`, `b`, `c`] |
+| `openshift_byo_dns` | no | whether to ignore DNS resources (you still need a public zone defined) |
+| `openshift_ssh_key` | no | whether to use a specific public key  |
+| `openshift_additional_trust_bundle` | no | additional trust bundle for accessing resources - ie proxy or repo | 
 | `aws_publish_strategy` | no | Whether to publish the API endpoint externally - Default: "External" |
 | `airgapped` | no | A map with enabled (true/false) and repository name - This must be used with `aws_publish_strategy` of `Internal` |
+| `proxy_config` | no | To be implemented  |
+| `use_ipv4` | no | To be implemented  |
+| `use_ipv6` | no | To be implemented  |
+
 
 
 See [Terraform documentation](https://www.terraform.io/intro/getting-started/variables.html) for the format of this file.
