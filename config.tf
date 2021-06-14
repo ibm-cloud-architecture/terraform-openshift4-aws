@@ -43,18 +43,6 @@ variable "openshift_pull_secret" {
   description = "File containing pull secret - get it from https://cloud.redhat.com/openshift/install/pull-secret"
 }
 
-variable "use_ipv4" {
-  type    = bool
-  default = true
-  description = "not implemented"
-}
-
-variable "use_ipv6" {
-  type    = bool
-  default = false
-  description = "not implemented"
-}
-
 variable "openshift_version" {
   type    = string
   default = "4.6.28"

@@ -133,10 +133,7 @@ aws_publish_strategy = "External"
 | `openshift_additional_trust_bundle` | no | additional trust bundle for accessing resources - ie proxy or repo | 
 | `aws_publish_strategy` | no | Whether to publish the API endpoint externally - Default: "External" |
 | `airgapped` | no | A map with enabled (true/false) and repository name - This must be used with `aws_publish_strategy` of `Internal` |
-| `proxy_config` | no | To be implemented  |
-| `use_ipv4` | no | To be implemented  |
-| `use_ipv6` | no | To be implemented  |
-
+| `proxy_config` | no | Proxy configuration for install - see config.tf |
 
 
 See [Terraform documentation](https://www.terraform.io/intro/getting-started/variables.html) for the format of this file.
