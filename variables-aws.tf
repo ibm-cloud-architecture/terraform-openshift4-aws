@@ -15,19 +15,19 @@ variable "aws_bootstrap_instance_type" {
 
 variable "aws_master_instance_type" {
   type        = string
-  description = "Instance type for the master node(s). Default: `m4.xlarge`."
+  description = "Instance type for the master node(s). Default: `m5.xlarge`."
   default     = "m5.xlarge"
 }
 
 variable "aws_worker_instance_type" {
   type        = string
-  description = "Instance type for the worker node(s). Default: `m4.2xlarge`."
+  description = "Instance type for the worker node(s). Default: `m5.2xlarge`."
   default     = "m5.2xlarge"
 }
 
 variable "aws_infra_instance_type" {
   type        = string
-  description = "Instance type for the worker node(s). Default: `m4.2xlarge`."
+  description = "Instance type for the worker node(s). Default: `m5.xlarge`."
   default     = "m5.xlarge"
 }
 
@@ -96,6 +96,7 @@ EOF
 
 variable "infra_count" {
   type    = string
+  description = "The number of infra nodes."
   default = 0
 }
 

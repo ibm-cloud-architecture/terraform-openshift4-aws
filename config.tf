@@ -92,7 +92,7 @@ variable "openshift_ssh_key" {
 }
 
 variable "openshift_byo_dns" {
-  description = "Do not deploy any public or private DNS zone into Azure"
+  description = "Do not deploy any public or private DNS zones"
   type        = bool
   default     = false
 }
