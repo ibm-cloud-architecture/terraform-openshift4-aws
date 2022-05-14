@@ -187,7 +187,7 @@ Setting up the mirror repository using AWS ECR:
     Extract the password token (`-p` argument) and create a Base64 string:
 
     ```
-    echo "AWS:<token>" | base64 -w0
+    echo -n 'AWS:<token>' | base64 -w0
     ```
 
     Put that into your pull secret:
