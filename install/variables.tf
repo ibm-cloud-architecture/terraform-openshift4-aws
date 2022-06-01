@@ -105,7 +105,7 @@ variable "openshift_pull_secret" {
 variable "openshift_installer_url" {
   type        = string
   description = "The URL to download OpenShift installer."
-  default     = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+  default     = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/"
 }
 
 # variable "aws_access_key_id" {
