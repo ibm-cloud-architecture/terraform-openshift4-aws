@@ -5,7 +5,7 @@ locals {
 }
 
 data "http" "images" {
-  url = "https://raw.githubusercontent.com/openshift/installer/release-${local.major_version}/data/data/rhcos.json"
+  url = "https://raw.githubusercontent.com/openshift/installer/release-${local.major_version}/data/data/coreos/rhcos.json"
   request_headers = {
     Accept = "application/json"
   }
