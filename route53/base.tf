@@ -4,7 +4,7 @@ locals {
   // based on if api_external_lb_dns_name for example, which will be null when there is no external lb for API.
   // So publish_strategy serves an coordinated proxy for that decision.
   public_endpoints = var.publish_strategy == "External" ? true : false
-
+ zone_id="Z00422892OO3HVUKA25OF"
   use_cname = contains(["us-gov-west-1", "us-gov-east-1"], var.region)
   use_alias = ! local.use_cname
 }
@@ -12,7 +12,8 @@ locals {
 data "aws_route53_zone" "public" {
   #  count = local.public_endpoints ? 1 : 0
   count = 1
-  name = var.base_domain
+  #name = var.base_domain
+  zone_id = local.zone_id
 }
 
 resource "aws_route53_zone" "int" {
